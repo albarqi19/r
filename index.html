@@ -78,12 +78,21 @@
             </a>
         </div>
 
-        <!-- Share Button -->
+        <!-- Action Buttons -->
         <div class="text-center mb-6 sm:mb-8">
-            <button id="shareBtn" class="bg-custom hover:bg-opacity-80 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-xl sm:rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center mx-auto gap-2 sm:gap-3 text-sm sm:text-base">
-                <i class="fas fa-share-alt text-lg sm:text-xl"></i>
-                <span>مشاركة الصفحة</span>
-            </button>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                <!-- Online Store Button -->
+                <button id="storeBtn" class="bg-primary hover:bg-opacity-80 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-xl sm:rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base w-full sm:w-auto">
+                    <i class="fas fa-shopping-cart text-lg sm:text-xl"></i>
+                    <span>المتجر الإلكتروني</span>
+                </button>
+                
+                <!-- Share Button -->
+                <button id="shareBtn" class="bg-custom hover:bg-opacity-80 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-xl sm:rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base w-full sm:w-auto">
+                    <i class="fas fa-share-alt text-lg sm:text-xl"></i>
+                    <span>مشاركة الصفحة</span>
+                </button>
+            </div>
         </div>
 
         <!-- Additional Info -->
@@ -182,6 +191,25 @@
                 `;
                 document.body.insertAdjacentHTML('beforeend', shareMenu);
             }
+        });
+
+        // Online Store functionality
+        document.getElementById('storeBtn').addEventListener('click', function() {
+            // Show temporary message since no link is provided yet
+            const button = this;
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-clock text-lg sm:text-xl"></i><span>قريباً جداً!</span>';
+            button.classList.remove('bg-primary');
+            button.classList.add('bg-secondary');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('bg-secondary');
+                button.classList.add('bg-primary');
+            }, 2000);
+            
+            console.log('تم النقر على زر المتجر الإلكتروني');
         });
 
         // Stagger animation on load
