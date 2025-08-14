@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحفيظ الشرقية - فرع غرب الدمام</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#494776',
+                        secondary: '#4F9DA6',
+                        custom: '#323266'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+        .title-font {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+        .social-icon {
+            transition: all 0.3s ease;
+        }
+        .social-icon:hover {
+            transform: translateY(-8px) scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        .social-icon:active {
+            transform: translateY(-4px) scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
+    
+    <!-- Main Container -->
+    <div class="w-full max-w-sm mx-auto">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <!-- Logo -->
+            <div class="mb-8">
+                <img src="Logo.png" alt="تحفيظ الشرقية" class="w-32 h-32 mx-auto object-contain">
+            </div>
+            
+            <!-- Branch Info -->
+            <p class="text-primary text-lg font-semibold">فرع غرب الدمام</p>
+        </div>
+
+        <!-- Social Icons Grid -->
+        <div class="grid grid-cols-2 gap-6 mb-12">
+            <!-- Twitter/X -->
+            <a href="https://x.com/Org2Qer" target="_blank" class="social-icon bg-custom rounded-3xl p-6 flex items-center justify-center aspect-square shadow-lg min-h-[100px]">
+                <i class="fab fa-twitter text-white text-5xl"></i>
+            </a>
+
+            <!-- WhatsApp -->
+            <a href="https://wa.me/966138360356" target="_blank" class="social-icon bg-custom rounded-3xl p-6 flex items-center justify-center aspect-square shadow-lg min-h-[100px]">
+                <i class="fab fa-whatsapp text-white text-5xl"></i>
+            </a>
+
+            <!-- Instagram -->
+            <a href="https://www.instagram.com/org2qer/" target="_blank" class="social-icon bg-custom rounded-3xl p-6 flex items-center justify-center aspect-square shadow-lg min-h-[100px]">
+                <i class="fab fa-instagram text-white text-5xl"></i>
+            </a>
+
+            <!-- Google Maps -->
+            <a href="https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9?g_st=com.google.maps.preview.copy" target="_blank" class="social-icon bg-custom rounded-3xl p-6 flex items-center justify-center aspect-square shadow-lg min-h-[100px]">
+                <i class="fas fa-map-marker-alt text-white text-5xl"></i>
+            </a>
+        </div>
+
+        <!-- Share Button -->
+        <div class="text-center mb-8">
+            <button id="shareBtn" class="bg-custom hover:bg-opacity-80 text-white font-semibold py-4 px-8 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center mx-auto gap-3">
+                <i class="fas fa-share-alt text-xl"></i>
+                <span>مشاركة الصفحة</span>
+            </button>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="text-center">
+            <div class="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mb-4"></div>
+            <p class="text-gray-400 text-xs">© ٢٠٢٤ تحفيظ الشرقية</p>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced click effects
+        document.querySelectorAll('.social-icon').forEach(icon => {
+            icon.addEventListener('click', function(e) {
+                // Don't prevent default - let the link work
+                
+                // Create pulse effect
+                this.style.transform = 'scale(0.9)';
+                this.style.transition = 'transform 0.1s ease';
+                
+                setTimeout(() => {
+                    this.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                        this.style.transition = 'all 0.3s ease';
+                    }, 100);
+                }, 100);
+                
+                // Get icon class for identification
+                const iconClass = this.querySelector('i').className;
+                let platform = 'منصة';
+                
+                if (iconClass.includes('twitter')) platform = 'تويتر';
+                else if (iconClass.includes('whatsapp')) platform = 'واتساب';
+                else if (iconClass.includes('instagram')) platform = 'إنستغرام';
+                else if (iconClass.includes('map-marker')) platform = 'خرائط جوجل';
+                
+                console.log('تم النقر على:', platform);
+            });
+            
+            // Add hover sound effect (optional)
+            icon.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.1)';
+            });
+            
+            icon.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+        });
+
+        // Share functionality
+        document.getElementById('shareBtn').addEventListener('click', async function() {
+            const shareData = {
+                title: 'تحفيظ الشرقية - فرع غرب الدمام',
+                text: 'روابط التواصل مع تحفيظ الشرقية - فرع غرب الدمام',
+                url: window.location.href
+            };
+
+            try {
+                // Check if Web Share API is supported
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                    console.log('تم المشاركة بنجاح');
+                } else {
+                    // Fallback: Copy link to clipboard
+                    await navigator.clipboard.writeText(window.location.href);
+                    
+                    // Show success message
+                    const button = this;
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check text-xl"></i><span>تم نسخ الرابط!</span>';
+                    button.classList.add('bg-green-500');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('bg-green-500');
+                    }, 2000);
+                }
+            } catch (err) {
+                console.log('خطأ في المشاركة:', err);
+                
+                // Fallback: Manual share options
+                const shareText = `تحفيظ الشرقية - فرع غرب الدمام\n${window.location.href}`;
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+                
+                // Create share menu
+                const shareMenu = `
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; text-align: center;">
+                        <h3 style="margin-bottom: 15px; color: #494776;">اختر طريقة المشاركة</h3>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <a href="${whatsappUrl}" target="_blank" style="background: #25D366; color: white; padding: 10px 15px; border-radius: 10px; text-decoration: none;">واتساب</a>
+                            <a href="${twitterUrl}" target="_blank" style="background: #1DA1F2; color: white; padding: 10px 15px; border-radius: 10px; text-decoration: none;">تويتر</a>
+                            <button onclick="this.parentElement.parentElement.remove()" style="background: #ccc; color: black; padding: 10px 15px; border: none; border-radius: 10px; cursor: pointer;">إلغاء</button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', shareMenu);
+            }
+        });
+
+        // Stagger animation on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const icons = document.querySelectorAll('.social-icon');
+            icons.forEach((icon, index) => {
+                icon.style.opacity = '0';
+                icon.style.transform = 'translateY(30px) scale(0.8)';
+                icon.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                setTimeout(() => {
+                    icon.style.opacity = '1';
+                    icon.style.transform = 'translateY(0) scale(1)';
+                }, index * 100 + 500);
+            });
+            
+            // Animate title
+            const title = document.querySelector('h1');
+            const subtitle = document.querySelector('h2');
+            const date = document.querySelector('p');
+            
+            [title, subtitle, date].forEach((el, index) => {
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-20px)';
+                    el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, index * 200 + 200);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
