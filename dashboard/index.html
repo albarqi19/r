@@ -432,8 +432,28 @@
             }
             
             async saveSocialLinks() {
+                console.log('🔄 بدء عملية الحفظ...');
+                
                 const submitBtn = document.querySelector('#socialLinksForm button[type="submit"]');
                 const spinner = document.getElementById('saveSpinner');
+                
+                console.log('🔍 عناصر النموذج:', {
+                    submitBtn: !!submitBtn,
+                    spinner: !!spinner,
+                    currentBranch: this.currentBranch
+                });
+                
+                if (!submitBtn) {
+                    console.error('❌ لم يتم العثور على زر الحفظ');
+                    this.showNotification('خطأ: لم يتم العثور على زر الحفظ', 'error');
+                    return;
+                }
+                
+                if (!this.currentBranch) {
+                    console.error('❌ لم يتم تحديد فرع');
+                    this.showNotification('خطأ: لم يتم تحديد فرع', 'error');
+                    return;
+                }
                 
                 // التحقق من وجود طلبات معلقة أولاً
                 if (window.supabaseService && window.supabaseService.checkPendingRequestsForBranch) {
@@ -446,7 +466,11 @@
                 
                 // إظهار حالة التحميل
                 submitBtn.disabled = true;
-                spinner.classList.remove('hidden');
+                if (spinner) {
+                    spinner.classList.remove('hidden');
+                } else {
+                    console.warn('⚠️ عنصر spinner غير موجود');
+                }
                 
                 try {
                     // جمع البيانات
@@ -499,8 +523,13 @@
                     this.showNotification('حدث خطأ أثناء حفظ البيانات', 'error');
                 } finally {
                     // إخفاء حالة التحميل
-                    submitBtn.disabled = false;
-                    spinner.classList.add('hidden');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                    }
+                    if (spinner) {
+                        spinner.classList.add('hidden');
+                    }
+                    console.log('✅ تم الانتهاء من عملية الحفظ');
                 }
             }
             
