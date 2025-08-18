@@ -792,6 +792,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // تحديث الدوال في window.supabaseService بعد تحميل Supabase
         if (window.supabaseService) {
             console.log('🔄 تحديث دوال Supabase Service...');
+            console.log('📋 الدوال قبل التحديث:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
+            
             window.supabaseService.getAllBranches = getAllBranches;
             window.supabaseService.getBranch = getBranch;
             window.supabaseService.updateBranch = updateBranch;
@@ -803,7 +805,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.supabaseService.setupInitialData = setupInitialData;
             window.supabaseService.signInUser = signInUser;
             window.supabaseService.signOutUser = signOutUser;
+            
+            console.log('📋 الدوال بعد التحديث:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
             console.log('✅ تم تحديث جميع دوال Supabase Service');
+            
+            // اختبار سريع
+            if (typeof window.supabaseService.getBranch === 'function') {
+                console.log('✅ دالة getBranch متوفرة ومربوطة بنجاح');
+            } else {
+                console.error('❌ فشل في ربط دالة getBranch');
+            }
+        } else {
+            console.error('❌ window.supabaseService غير موجود!');
         }
         
         // إعداد البيانات الأولية إذا لزم الأمر
@@ -815,3 +828,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 console.log('📝 تم تحميل Supabase Service');
+
+// إضافة fallback للربط المباشر
+setTimeout(() => {
+    if (window.supabaseService && !window.supabaseService.getBranch) {
+        console.log('🔄 Fallback: ربط الدوال مباشرة...');
+        
+        // التحقق من وجود الدوال
+        if (typeof getBranch === 'function') {
+            window.supabaseService.getBranch = getBranch;
+            console.log('✅ تم ربط getBranch');
+        }
+        
+        if (typeof getAllBranches === 'function') {
+            window.supabaseService.getAllBranches = getAllBranches;
+            console.log('✅ تم ربط getAllBranches');
+        }
+        
+        console.log('📋 الدوال المتاحة الآن:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
+    }
+}, 2000);
