@@ -40,7 +40,7 @@
         }
         
         .gradient-bg {
-            background: #494776;
+            background: #ffffff;
         }
         
         .pattern-overlay {
@@ -89,19 +89,9 @@
                     <img src="Logo.png" alt="تحفيظ الشرقية" class="w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 mx-auto object-contain drop-shadow-lg">
                 </div>
                 
-                <!-- Main Title -->
-                <h1 class="text-white text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 opacity-0 fade-in-up stagger-1">
-                    تحفيظ الشرقية
-                </h1>
-                
                 <!-- Subtitle -->
-                <p class="text-white/90 text-base sm:text-lg lg:text-xl mb-2 opacity-0 fade-in-up stagger-2">
-                    اختر الفرع الأقرب إليك
-                </p>
-                
-                <!-- Since -->
-                <p class="text-accent text-sm sm:text-base font-medium opacity-0 fade-in-up stagger-3">
-                    منذ ١٣٨٨ هـ
+                <p class="text-gray-700 text-base sm:text-lg lg:text-xl mb-2 opacity-0 fade-in-up stagger-2 font-bold">
+                    بوابة التواصل
                 </p>
                 
                 <!-- Decorative Line -->
@@ -278,7 +268,7 @@
         <div class="text-center mt-12 sm:mt-16">
             <div class="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mb-6"></div>
             <p class="text-gray-400 text-sm sm:text-base mb-2">
-                خدمة تحفيظ القرآن الكريم بالمنطقة الشرقية
+                بوابة التواصل
             </p>
             <p class="text-gray-400 text-xs">© ٢٠٢٤ تحفيظ الشرقية - جميع الحقوق محفوظة</p>
             
@@ -352,14 +342,14 @@
             document.querySelector('img[alt="تحفيظ الشرقية"]').addEventListener('click', function() {
                 clickCount++;
                 if (clickCount === 3) {
-                    window.location.href = '/admin/login.html';
+                    window.location.href = 'auth/login.html';
                 }
                 setTimeout(() => clickCount = 0, 1000);
             });
             
             // Admin button
             document.getElementById('adminBtn').addEventListener('click', function() {
-                window.location.href = '/admin/login.html';
+                window.location.href = 'auth/login.html';
             });
         });
         
