@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <script src="./assets/js/branches-data.js"></script>
+    <script src="./assets/js/supabase-service.js"></script>
     <script>
         class BranchPageManager {
             constructor() {
@@ -173,28 +173,45 @@
             }
 
             async loadBranchData() {
-                // التحقق من وجود بيانات الفروع
-                if (typeof window.branchesData === 'undefined') {
-                    console.error('بيانات الفروع غير متوفرة');
+                try {
+                    console.log('🔄 جلب بيانات الفرع من Supabase:', this.branchId);
+                    
+                    // انتظار تحميل خدمة Supabase
+                    let attempts = 0;
+                    while (!window.supabaseService && attempts < 50) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
+                    if (!window.supabaseService || !window.supabaseService.getBranch) {
+                        console.error('⚠️ خدمة Supabase غير متوفرة');
+                        return;
+                    }
+                    
+                    // جلب بيانات الفرع من قاعدة البيانات
+                    const result = await window.supabaseService.getBranch(this.branchId);
+                    console.log('📊 نتيجة جلب البيانات:', result);
+                    
+                    if (result.success && result.data) {
+                        this.branchData = result.data;
+                        console.log('✅ تم تحميل بيانات الفرع من قاعدة البيانات:', this.branchData.branch_name);
+                    } else {
+                        console.error('❌ لم يتم العثور على الفرع في قاعدة البيانات:', this.branchId);
+                        return;
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ خطأ في جلب بيانات الفرع من قاعدة البيانات:', error);
                     return;
                 }
-
-                this.branchData = window.branchesData[this.branchId];
-                
-                if (!this.branchData) {
-                    console.error('فرع غير موجود:', this.branchId);
-                    return;
-                }
-
-                console.log('تم تحميل بيانات الفرع:', this.branchData.name);
             }
 
             renderBranchPage() {
                 // تحديث عنوان الصفحة
-                document.getElementById('pageTitle').textContent = `تحفيظ الشرقية - ${this.branchData.name}`;
+                document.getElementById('pageTitle').textContent = `تحفيظ الشرقية - ${this.branchData.branch_name}`;
                 
                 // تحديث اسم الفرع
-                document.getElementById('branchName').textContent = this.branchData.name;
+                document.getElementById('branchName').textContent = this.branchData.branch_name;
 
                 // إنشاء أيقونات التواصل الاجتماعي
                 this.renderSocialIcons();
@@ -204,47 +221,41 @@
                 const socialGrid = document.getElementById('socialGrid');
                 socialGrid.innerHTML = '';
 
+                // التحقق من صحة الحقول قبل العرض
+                function isValidField(value) {
+                    return value && value.trim() !== '' && value !== 'null' && value !== null;
+                }
+
                 const socialPlatforms = [
                     {
                         name: 'twitter',
                         icon: 'fab fa-twitter',
-                        url: this.branchData.twitter,
+                        url: isValidField(this.branchData.twitter) ? this.branchData.twitter : null,
                         color: 'text-white'
                     },
                     {
                         name: 'whatsapp',
                         icon: 'fab fa-whatsapp',
-                        url: this.branchData.whatsapp ? `https://wa.me/${this.branchData.whatsapp}` : null,
+                        url: isValidField(this.branchData.whatsapp) ? `https://wa.me/${this.branchData.whatsapp.replace(/[^\d]/g, '')}` : null,
                         color: 'text-white'
                     },
                     {
                         name: 'instagram',
                         icon: 'fab fa-instagram',
-                        url: this.branchData.instagram,
+                        url: isValidField(this.branchData.instagram) ? this.branchData.instagram : null,
                         color: 'text-white'
                     },
                     {
                         name: 'location',
                         icon: 'fas fa-map-marker-alt',
-                        url: this.branchData.location,
-                        color: 'text-white'
-                    },
-                    {
-                        name: 'email',
-                        icon: 'fas fa-envelope',
-                        url: this.branchData.email ? `mailto:${this.branchData.email}` : null,
-                        color: 'text-white'
-                    },
-                    {
-                        name: 'phone',
-                        icon: 'fas fa-phone',
-                        url: this.branchData.phone ? `tel:${this.branchData.phone}` : null,
+                        url: isValidField(this.branchData.location) ? this.branchData.location : null,
                         color: 'text-white'
                     }
                 ];
 
                 // إظهار فقط الأيقونات المتوفرة
                 const availablePlatforms = socialPlatforms.filter(platform => platform.url);
+                console.log('🔗 المنصات المتوفرة:', availablePlatforms.map(p => p.name));
 
                 availablePlatforms.forEach((platform, index) => {
                     if (platform.url) {
@@ -252,6 +263,10 @@
                         socialGrid.appendChild(iconElement);
                     }
                 });
+                
+                if (availablePlatforms.length === 0) {
+                    console.log('⚠️ لا توجد روابط متوفرة للعرض');
+                }
             }
 
             createSocialIcon(platform, index) {
@@ -290,13 +305,9 @@
             }
 
             setupEventListeners() {
-                // زر المتجر الإلكتروني
+                // زر المتجر الإلكتروني - معطل حالياً
                 document.getElementById('storeBtn').addEventListener('click', () => {
-                    if (this.branchData.store) {
-                        window.open(this.branchData.store, '_blank');
-                    } else {
-                        this.showComingSoon('storeBtn', 'المتجر الإلكتروني قريباً جداً!');
-                    }
+                    this.showComingSoon('storeBtn', 'المتجر الإلكتروني قريباً جداً!');
                 });
 
                 // زر المشاركة
@@ -307,8 +318,8 @@
 
             async handleShare() {
                 const shareData = {
-                    title: `تحفيظ الشرقية - ${this.branchData.name}`,
-                    text: `روابط التواصل مع تحفيظ الشرقية - ${this.branchData.name}`,
+                    title: `تحفيظ الشرقية - ${this.branchData.branch_name}`,
+                    text: `روابط التواصل مع تحفيظ الشرقية - ${this.branchData.branch_name}`,
                     url: window.location.href
                 };
 
@@ -327,7 +338,7 @@
             }
 
             showFallbackShare() {
-                const shareText = `تحفيظ الشرقية - ${this.branchData.name}\n${window.location.href}`;
+                const shareText = `تحفيظ الشرقية - ${this.branchData.branch_name}\n${window.location.href}`;
                 const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
                 const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
                 
