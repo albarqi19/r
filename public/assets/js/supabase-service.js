@@ -41,7 +41,7 @@ window.supabaseService = {
         return { success: true, message: 'تم تسجيل الخروج' };
     },
     
-    // placeholders للدوال الأخرى - سيتم تحديثها لاحقاً
+    // دوال أساسية - ستتم إضافتها فور التعريف
     getAllBranches: null,
     getBranch: null,
     updateBranch: null,
@@ -49,6 +49,7 @@ window.supabaseService = {
     approveUpdateRequest: null,
     rejectUpdateRequest: null,
     getPendingRequests: null,
+    checkPendingRequestsForBranch: null,
     logEvent: function(eventName, parameters = {}) {
         console.log('📊 تسجيل الحدث:', eventName, parameters);
     },
@@ -198,6 +199,12 @@ async function getAllBranches() {
     }
 }
 
+// جعل الدالة متاحة عالمياً
+window.getAllBranches = getAllBranches;
+if (window.supabaseService) {
+    window.supabaseService.getAllBranches = getAllBranches;
+}
+
 // جلب بيانات فرع محدد من Supabase
 async function getBranch(branchId) {
     try {
@@ -221,6 +228,12 @@ async function getBranch(branchId) {
         console.error('❌ خطأ في جلب بيانات الفرع:', error);
         return { success: false, error: error.message };
     }
+}
+
+// جعل الدالة متاحة عالمياً
+window.getBranch = getBranch;
+if (window.supabaseService) {
+    window.supabaseService.getBranch = getBranch;
 }
 
 // تحديث بيانات فرع في Supabase

@@ -41,7 +41,7 @@ window.supabaseService = {
         return { success: true, message: 'تم تسجيل الخروج' };
     },
     
-    // placeholders للدوال الأخرى - سيتم تحديثها لاحقاً
+    // دوال أساسية - ستتم إضافتها فور التعريف
     getAllBranches: null,
     getBranch: null,
     updateBranch: null,
@@ -49,6 +49,7 @@ window.supabaseService = {
     approveUpdateRequest: null,
     rejectUpdateRequest: null,
     getPendingRequests: null,
+    checkPendingRequestsForBranch: null,
     logEvent: function(eventName, parameters = {}) {
         console.log('📊 تسجيل الحدث:', eventName, parameters);
     },
@@ -198,6 +199,12 @@ async function getAllBranches() {
     }
 }
 
+// جعل الدالة متاحة عالمياً
+window.getAllBranches = getAllBranches;
+if (window.supabaseService) {
+    window.supabaseService.getAllBranches = getAllBranches;
+}
+
 // جلب بيانات فرع محدد من Supabase
 async function getBranch(branchId) {
     try {
@@ -221,6 +228,12 @@ async function getBranch(branchId) {
         console.error('❌ خطأ في جلب بيانات الفرع:', error);
         return { success: false, error: error.message };
     }
+}
+
+// جعل الدالة متاحة عالمياً
+window.getBranch = getBranch;
+if (window.supabaseService) {
+    window.supabaseService.getBranch = getBranch;
 }
 
 // تحديث بيانات فرع في Supabase
@@ -815,3 +828,63 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 console.log('📝 تم تحميل Supabase Service');
+
+// ربط فوري ومباشر للدوال
+setTimeout(() => {
+    console.log('🔄 بدء ربط الدوال الأساسية...');
+    console.log('🔍 حالة window.supabaseService:', !!window.supabaseService);
+    console.log('🔍 الدوال المتاحة قبل الربط:', window.supabaseService ? Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function') : 'غير متوفر');
+    
+    if (window.supabaseService) {
+        // ربط الدوال مباشرة إذا كانت معرفة
+        if (typeof getBranch === 'function') {
+            window.supabaseService.getBranch = getBranch;
+            console.log('✅ تم ربط getBranch');
+        } else {
+            console.error('❌ دالة getBranch غير معرفة');
+        }
+        
+        if (typeof getAllBranches === 'function') {
+            window.supabaseService.getAllBranches = getAllBranches;
+            console.log('✅ تم ربط getAllBranches');
+        } else {
+            console.error('❌ دالة getAllBranches غير معرفة');
+        }
+        
+        if (typeof updateBranch === 'function') {
+            window.supabaseService.updateBranch = updateBranch;
+            console.log('✅ تم ربط updateBranch');
+        }
+        
+        if (typeof createUpdateRequest === 'function') {
+            window.supabaseService.createUpdateRequest = createUpdateRequest;
+            console.log('✅ تم ربط createUpdateRequest');
+        }
+        
+        if (typeof approveUpdateRequest === 'function') {
+            window.supabaseService.approveUpdateRequest = approveUpdateRequest;
+            console.log('✅ تم ربط approveUpdateRequest');
+        }
+        
+        if (typeof rejectUpdateRequest === 'function') {
+            window.supabaseService.rejectUpdateRequest = rejectUpdateRequest;
+            console.log('✅ تم ربط rejectUpdateRequest');
+        }
+        
+        if (typeof getPendingRequests === 'function') {
+            window.supabaseService.getPendingRequests = getPendingRequests;
+            console.log('✅ تم ربط getPendingRequests');
+        }
+        
+        if (typeof checkPendingRequestsForBranch === 'function') {
+            window.supabaseService.checkPendingRequestsForBranch = checkPendingRequestsForBranch;
+            console.log('✅ تم ربط checkPendingRequestsForBranch');
+        }
+        
+        console.log('📋 الدوال المتاحة بعد الربط:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
+        console.log('🎯 تحديداً getBranch:', typeof window.supabaseService.getBranch);
+        console.log('🎯 تحديداً getAllBranches:', typeof window.supabaseService.getAllBranches);
+    } else {
+        console.error('❌ window.supabaseService غير موجود');
+    }
+}, 500);
