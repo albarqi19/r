@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحفيظ الشرقية - فرع التعيرية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/supabase-service.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#494776',
+                        secondary: '#4F9DA6',
+                        custom: '#323266'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+        .title-font {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+        .social-icon {
+            transition: all 0.3s ease;
+        }
+        .social-icon:hover {
+            transform: translateY(-8px) scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        .social-icon:active {
+            transform: translateY(-4px) scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+    
+    <!-- Main Container -->
+    <div class="w-full max-w-xs sm:max-w-sm mx-auto px-4 sm:px-0">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-8 sm:mb-12">
+            <!-- Logo -->
+            <div class="mb-6 sm:mb-8">
+                <img src="../../Logo.png" alt="تحفيظ الشرقية" class="w-24 h-24 sm:w-32 sm:h-32 mx-auto object-contain">
+            </div>
+            
+            <!-- Branch Info -->
+            <p class="text-primary text-base sm:text-lg font-semibold px-2 branch-name">فرع التعيرية</p>
+        </div>
+
+        <!-- Social Icons Grid -->
+        <div class="grid grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
+            <!-- Twitter/X -->
+            <a id="twitterLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
+                <i class="fab fa-twitter text-white text-3xl sm:text-5xl"></i>
+            </a>
+
+            <!-- WhatsApp -->
+            <a id="whatsappLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
+                <i class="fab fa-whatsapp text-white text-3xl sm:text-5xl"></i>
+            </a>
+
+            <!-- Instagram -->
+            <a id="instagramLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
+                <i class="fab fa-instagram text-white text-3xl sm:text-5xl"></i>
+            </a>
+
+            <!-- Google Maps -->
+            <a id="locationLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
+                <i class="fas fa-map-marker-alt text-white text-3xl sm:text-5xl"></i>
+            </a>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-center mb-6 sm:mb-8">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                <!-- Online Store Button -->
+                <button id="storeBtn" class="bg-primary hover:bg-opacity-80 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-xl sm:rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base w-full sm:w-auto">
+                    <i class="fas fa-shopping-cart text-lg sm:text-xl"></i>
+                    <span>المتجر الإلكتروني</span>
+                </button>
+                
+                <!-- Share Button -->
+                <button id="shareBtn" class="bg-custom hover:bg-opacity-80 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-xl sm:rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base w-full sm:w-auto">
+                    <i class="fas fa-share-alt text-lg sm:text-xl"></i>
+                    <span>مشاركة الصفحة</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="text-center">
+            <div class="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mb-4"></div>
+            <p class="text-gray-400 text-xs">© ٢٠٢٤ تحفيظ الشرقية</p>
+        </div>
+    </div>
+
+    <script>
+        // معرف الفرع الحالي
+        const BRANCH_ID = 'taaeriya';
+        
+        // تحميل بيانات الفرع من قاعدة البيانات
+        async function loadBranchData() {
+            try {
+                console.log('🔄 جلب بيانات الفرع:', BRANCH_ID);
+                
+                // انتظار تحميل خدمة Supabase
+                let attempts = 0;
+                while (!window.supabaseService && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.supabaseService || !window.supabaseService.getBranch) {
+                    console.warn('⚠️ خدمة Supabase غير متوفرة، استخدام البيانات الافتراضية');
+                    loadDefaultData();
+                    return;
+                }
+                
+                // جلب بيانات الفرع
+                const branchData = await window.supabaseService.getBranch(BRANCH_ID);
+                console.log('📊 بيانات الفرع:', branchData);
+                
+                if (branchData.success && branchData.data) {
+                    updateBranchLinks(branchData.data);
+                } else {
+                    console.warn('⚠️ لم يتم العثور على بيانات الفرع، استخدام البيانات الافتراضية');
+                    loadDefaultData();
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في جلب بيانات الفرع:', error);
+                loadDefaultData();
+            }
+        }
+        
+        // تحديث الروابط بناءً على بيانات قاعدة البيانات
+        function updateBranchLinks(branchData) {
+            console.log('🔗 تحديث الروابط:', branchData);
+            
+            // Twitter
+            if (branchData.twitter) {
+                const twitterLink = document.getElementById('twitterLink');
+                twitterLink.href = branchData.twitter;
+                twitterLink.style.display = 'flex';
+            }
+            
+            // Instagram
+            if (branchData.instagram) {
+                const instagramLink = document.getElementById('instagramLink');
+                instagramLink.href = branchData.instagram;
+                instagramLink.style.display = 'flex';
+            }
+            
+            // WhatsApp
+            if (branchData.whatsapp) {
+                const whatsappLink = document.getElementById('whatsappLink');
+                whatsappLink.href = `https://wa.me/${branchData.whatsapp}`;
+                whatsappLink.style.display = 'flex';
+            }
+            
+            // Location
+            if (branchData.location) {
+                const locationLink = document.getElementById('locationLink');
+                locationLink.href = branchData.location;
+                locationLink.style.display = 'flex';
+            }
+            
+            console.log('✅ تم تحديث الروابط بنجاح');
+        }
+        
+        // تحميل البيانات الافتراضية (في حالة عدم توفر قاعدة البيانات)
+        function loadDefaultData() {
+            console.log('📝 تحميل البيانات الافتراضية');
+            
+            const defaultData = {
+                twitter: 'https://x.com/Org2Qer',
+                instagram: 'https://www.instagram.com/org2qer/',
+                whatsapp: '966138360356',
+                location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9?g_st=com.google.maps.preview.copy'
+            };
+            
+            updateBranchLinks(defaultData);
+        }
+        
+        // Enhanced click effects
+        document.addEventListener('DOMContentLoaded', () => {
+            // تحميل بيانات الفرع
+            loadBranchData();
+            
+            // باقي الكود للتأثيرات والحركات
+            setupClickEffects();
+            setupAnimations();
+        });
+        
+        function setupClickEffects() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.social-icon')) {
+                    const icon = e.target.closest('.social-icon');
+                    
+                    // Create pulse effect
+                    icon.style.transform = 'scale(0.9)';
+                    icon.style.transition = 'transform 0.1s ease';
+                    
+                    setTimeout(() => {
+                        icon.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            icon.style.transform = '';
+                            icon.style.transition = 'all 0.3s ease';
+                        }, 100);
+                    }, 100);
+                    
+                    // Get icon class for identification
+                    const iconElement = icon.querySelector('i');
+                    let platform = 'منصة';
+                    
+                    if (iconElement.className.includes('twitter')) platform = 'تويتر';
+                    else if (iconElement.className.includes('whatsapp')) platform = 'واتساب';
+                    else if (iconElement.className.includes('instagram')) platform = 'إنستغرام';
+                    else if (iconElement.className.includes('map-marker')) platform = 'خرائط جوجل';
+                    
+                    console.log('تم النقر على:', platform);
+                }
+            });
+            
+            // Add hover effects
+            document.addEventListener('mouseenter', function(e) {
+                if (e.target.closest('.social-icon')) {
+                    const icon = e.target.closest('.social-icon');
+                    icon.style.transform = 'translateY(-8px) scale(1.1)';
+                }
+            }, true);
+            
+            document.addEventListener('mouseleave', function(e) {
+                if (e.target.closest('.social-icon')) {
+                    const icon = e.target.closest('.social-icon');
+                    icon.style.transform = '';
+                }
+            }, true);
+        }
+        
+        function setupAnimations() {
+            // Stagger animation on load
+            const icons = document.querySelectorAll('.social-icon');
+            icons.forEach((icon, index) => {
+                icon.style.opacity = '0';
+                icon.style.transform = 'translateY(30px) scale(0.8)';
+                icon.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                setTimeout(() => {
+                    icon.style.opacity = '1';
+                    icon.style.transform = 'translateY(0) scale(1)';
+                }, index * 100 + 500);
+            });
+            
+            // Animate title
+            const title = document.querySelector('h1');
+            const subtitle = document.querySelector('h2');
+            const date = document.querySelector('p');
+            
+            [title, subtitle, date].forEach((el, index) => {
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-20px)';
+                    el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, index * 200 + 200);
+                }
+            });
+        }
+
+        // Share functionality
+        document.getElementById('shareBtn').addEventListener('click', async function() {
+            const shareData = {
+                title: 'تحفيظ الشرقية - فرع التعيرية',
+                text: 'روابط التواصل مع تحفيظ الشرقية - فرع التعيرية',
+                url: window.location.href
+            };
+
+            try {
+                // Check if Web Share API is supported
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                    console.log('تم المشاركة بنجاح');
+                } else {
+                    // Fallback: Copy link to clipboard
+                    await navigator.clipboard.writeText(window.location.href);
+                    
+                    // Show success message
+                    const button = this;
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check text-xl"></i><span>تم نسخ الرابط!</span>';
+                    button.classList.add('bg-green-500');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('bg-green-500');
+                    }, 2000);
+                }
+            } catch (err) {
+                console.log('خطأ في المشاركة:', err);
+                
+                // Fallback: Manual share options
+                const shareText = `تحفيظ الشرقية - فرع التعيرية\n${window.location.href}`;
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+                
+                // Create share menu
+                const shareMenu = `
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; text-align: center;">
+                        <h3 style="margin-bottom: 15px; color: #494776;">اختر طريقة المشاركة</h3>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <a href="${whatsappUrl}" target="_blank" style="background: #25D366; color: white; padding: 10px 15px; border-radius: 10px; text-decoration: none;">واتساب</a>
+                            <a href="${twitterUrl}" target="_blank" style="background: #1DA1F2; color: white; padding: 10px 15px; border-radius: 10px; text-decoration: none;">تويتر</a>
+                            <button onclick="this.parentElement.parentElement.remove()" style="background: #ccc; color: black; padding: 10px 15px; border: none; border-radius: 10px; cursor: pointer;">إلغاء</button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', shareMenu);
+            }
+        });
+
+        // Online Store functionality
+        document.getElementById('storeBtn').addEventListener('click', function() {
+            // Show temporary message since no link is provided yet
+            const button = this;
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-clock text-lg sm:text-xl"></i><span>قريباً جداً!</span>';
+            button.classList.remove('bg-primary');
+            button.classList.add('bg-secondary');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('bg-secondary');
+                button.classList.add('bg-primary');
+            }, 2000);
+            
+            console.log('تم النقر على زر المتجر الإلكتروني');
+        });
+
+        // Stagger animation on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const icons = document.querySelectorAll('.social-icon');
+            icons.forEach((icon, index) => {
+                icon.style.opacity = '0';
+                icon.style.transform = 'translateY(30px) scale(0.8)';
+                icon.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                setTimeout(() => {
+                    icon.style.opacity = '1';
+                    icon.style.transform = 'translateY(0) scale(1)';
+                }, index * 100 + 500);
+            });
+            
+            // Animate title
+            const title = document.querySelector('h1');
+            const subtitle = document.querySelector('h2');
+            const date = document.querySelector('p');
+            
+            [title, subtitle, date].forEach((el, index) => {
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-20px)';
+                    el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, index * 200 + 200);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
