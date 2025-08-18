@@ -175,10 +175,26 @@ async function signOutUser() {
 
 // ===== وظائف قاعدة البيانات =====
 
+// دالة مساعدة للانتظار حتى تهيئة supabaseClient
+async function waitForSupabaseClient(maxWait = 5000) {
+    const startTime = Date.now();
+    while (!supabaseClient && (Date.now() - startTime < maxWait)) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return supabaseClient;
+}
+
 // جلب بيانات جميع الفروع من Supabase
 async function getAllBranches() {
     try {
-        const { data, error } = await supabaseClient
+        // انتظار تهيئة supabaseClient
+        const client = await waitForSupabaseClient();
+        if (!client) {
+            console.error('❌ supabaseClient غير مهيأ بعد الانتظار');
+            return { success: false, error: 'قاعدة البيانات غير متاحة حالياً' };
+        }
+        
+        const { data, error } = await client
             .from('branches')
             .select('*');
         
@@ -208,7 +224,14 @@ if (window.supabaseService) {
 // جلب بيانات فرع محدد من Supabase
 async function getBranch(branchId) {
     try {
-        const { data, error } = await supabaseClient
+        // انتظار تهيئة supabaseClient
+        const client = await waitForSupabaseClient();
+        if (!client) {
+            console.error('❌ supabaseClient غير مهيأ بعد الانتظار');
+            return { success: false, error: 'قاعدة البيانات غير متاحة حالياً' };
+        }
+        
+        const { data, error } = await client
             .from('branches')
             .select('*')
             .eq('id', branchId)
