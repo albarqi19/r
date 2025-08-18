@@ -121,8 +121,7 @@
                 }
                 
                 if (!window.supabaseService || !window.supabaseService.getBranch) {
-                    console.warn('⚠️ خدمة Supabase غير متوفرة، استخدام البيانات الافتراضية');
-                    loadDefaultData();
+                    console.warn('⚠️ خدمة Supabase غير متوفرة - لن يتم عرض أي روابط');
                     return;
                 }
                 
@@ -133,13 +132,12 @@
                 if (branchData.success && branchData.data) {
                     updateBranchLinks(branchData.data);
                 } else {
-                    console.warn('⚠️ لم يتم العثور على بيانات الفرع، استخدام البيانات الافتراضية');
-                    loadDefaultData();
+                    console.warn('⚠️ لم يتم العثور على بيانات الفرع - لن يتم عرض أي روابط');
                 }
                 
             } catch (error) {
                 console.error('❌ خطأ في جلب بيانات الفرع:', error);
-                loadDefaultData();
+                console.warn('⚠️ سيتم إخفاء جميع الروابط بسبب الخطأ');
             }
         }
         
@@ -147,49 +145,57 @@
         function updateBranchLinks(branchData) {
             console.log('🔗 تحديث الروابط:', branchData);
             
-            // Twitter
+            // Twitter - فتح التطبيق مباشرة على الهاتف أو الموقع على الحاسوب
             if (branchData.twitter) {
                 const twitterLink = document.getElementById('twitterLink');
-                twitterLink.href = branchData.twitter;
+                // استخراج اسم المستخدم من الرابط
+                const twitterUsername = branchData.twitter.split('/').pop();
+                twitterLink.href = `twitter://user?screen_name=${twitterUsername}`;
+                twitterLink.addEventListener('click', function(e) {
+                    // fallback للمتصفح إذا لم يفتح التطبيق
+                    setTimeout(() => {
+                        window.open(branchData.twitter, '_blank');
+                    }, 500);
+                });
                 twitterLink.style.display = 'flex';
             }
             
-            // Instagram
+            // Instagram - فتح التطبيق مباشرة
             if (branchData.instagram) {
                 const instagramLink = document.getElementById('instagramLink');
-                instagramLink.href = branchData.instagram;
+                const instagramUsername = branchData.instagram.split('/').filter(part => part).pop();
+                instagramLink.href = `instagram://user?username=${instagramUsername}`;
+                instagramLink.addEventListener('click', function(e) {
+                    // fallback للمتصفح
+                    setTimeout(() => {
+                        window.open(branchData.instagram, '_blank');
+                    }, 500);
+                });
                 instagramLink.style.display = 'flex';
             }
             
-            // WhatsApp
+            // WhatsApp - فتح واتساب مباشرة
             if (branchData.whatsapp) {
                 const whatsappLink = document.getElementById('whatsappLink');
-                whatsappLink.href = `https://wa.me/${branchData.whatsapp}`;
+                const phoneNumber = branchData.whatsapp.replace(/[^\d]/g, ''); // إزالة كل شيء عدا الأرقام
+                whatsappLink.href = `whatsapp://send?phone=${phoneNumber}`;
+                whatsappLink.addEventListener('click', function(e) {
+                    // fallback للواتساب ويب
+                    setTimeout(() => {
+                        window.open(`https://wa.me/${phoneNumber}`, '_blank');
+                    }, 500);
+                });
                 whatsappLink.style.display = 'flex';
             }
             
-            // Location
+            // Location - فتح خرائط جوجل مباشرة
             if (branchData.location) {
                 const locationLink = document.getElementById('locationLink');
                 locationLink.href = branchData.location;
                 locationLink.style.display = 'flex';
             }
             
-            console.log('✅ تم تحديث الروابط بنجاح');
-        }
-        
-        // تحميل البيانات الافتراضية (في حالة عدم توفر قاعدة البيانات)
-        function loadDefaultData() {
-            console.log('📝 تحميل البيانات الافتراضية');
-            
-            const defaultData = {
-                twitter: 'https://x.com/Org2Qer',
-                instagram: 'https://www.instagram.com/org2qer/',
-                whatsapp: '966138360356',
-                location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9?g_st=com.google.maps.preview.copy'
-            };
-            
-            updateBranchLinks(defaultData);
+            console.log('✅ تم تحديث الروابط بنجاح - ستفتح التطبيقات مباشرة');
         }
         
         // Enhanced click effects
