@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المدير - تحفيظ الشرقية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#494776',
+                        secondary: '#4F9DA6',
+                        custom: '#323266',
+                        accent: '#7DCCE5'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        .admin-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(73, 71, 118, 0.1);
+        }
+        .admin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(73, 71, 118, 0.1);
+        }
+        .pending-item {
+            border-right: 4px solid #f59e0b;
+            background: #fef3c7;
+        }
+        .approved-item {
+            border-right: 4px solid #10b981;
+            background: #d1fae5;
+        }
+        .rejected-item {
+            border-right: 4px solid #ef4444;
+            background: #fee2e2;
+        }
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .approve-btn {
+            background: #10b981;
+            color: white;
+        }
+        .approve-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+        .reject-btn {
+            background: #ef4444;
+            color: white;
+        }
+        .reject-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        .view-btn {
+            background: #6b7280;
+            color: white;
+        }
+        .view-btn:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <nav class="bg-primary shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <img src="../Logo.png" alt="تحفيظ الشرقية" class="w-12 h-12 object-contain">
+                    <div>
+                        <h1 class="text-white text-xl font-bold">لوحة المدير</h1>
+                        <p class="text-white/80 text-sm">إدارة جميع الفروع</p>
+                    </div>
+                </div>
+                
+                <!-- Admin Actions -->
+                <div class="flex items-center gap-3">
+                    <span class="text-white/80 text-sm hidden sm:block">مرحباً، المدير</span>
+                    <button id="logoutBtn" class="bg-red-500/80 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm transition-all">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
+            <!-- Total Branches -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">إجمالي الفروع</p>
+                        <p class="text-2xl font-bold text-primary" id="totalBranches">11</p>
+                    </div>
+                    <div class="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-map-marker-alt text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pending Requests -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">طلبات معلقة</p>
+                        <p class="text-2xl font-bold text-orange-600" id="pendingRequests">3</p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Branches -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">فروع نشطة</p>
+                        <p class="text-2xl font-bold text-green-600" id="activeBranches">11</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-check-circle text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- This Month Updates -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">تحديثات الشهر</p>
+                        <p class="text-2xl font-bold text-blue-600" id="monthlyUpdates">7</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Pending Approvals -->
+            <div class="lg:col-span-2">
+                <div class="admin-card bg-white rounded-2xl shadow-lg">
+                    <div class="p-6 border-b border-gray-100">
+                        <h2 class="text-xl font-bold text-primary flex items-center gap-2">
+                            <i class="fas fa-tasks"></i>
+                            طلبات التحديث المعلقة
+                        </h2>
+                        <p class="text-gray-500 text-sm mt-1">مراجعة وموافقة تغييرات الفروع</p>
+                    </div>
+                    
+                    <div class="p-6" id="requestsList">
+                        <!-- Loading indicator -->
+                        <div id="requestsLoading" class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                            <p class="text-gray-500">جاري تحميل الطلبات...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                
+                <!-- Quick Actions -->
+                <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-rocket"></i>
+                        إجراءات سريعة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-plus"></i>
+                            <span>إضافة فرع جديد</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-cog"></i>
+                            <span>إعدادات النظام</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>تقارير مفصلة</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-download"></i>
+                            <span>تصدير البيانات</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-history"></i>
+                        النشاطات الأخيرة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700">تم اعتماد تحديث فرع الرفيعة</p>
+                                <p class="text-xs text-gray-500">منذ ساعة</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700">طلب جديد من فرع بقيق</p>
+                                <p class="text-xs text-gray-500">منذ 3 ساعات</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700">تسجيل دخول مدير فرع عنك</p>
+                                <p class="text-xs text-gray-500">منذ 5 ساعات</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="admin-card bg-secondary rounded-2xl p-6 shadow-lg text-white">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-server"></i>
+                        حالة النظام
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">قاعدة البيانات</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded">متصلة</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">الخادم</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded">نشط</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">آخر نسخة احتياطية</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded">اليوم</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="fixed inset-0 bg-black/50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">تأكيد الموافقة</h3>
+                <p class="text-gray-600 mb-6">هل أنت متأكد من الموافقة على هذا التحديث؟</p>
+                <div class="flex gap-3">
+                    <button id="confirmApprove" class="flex-1 approve-btn">
+                        <i class="fas fa-check ml-2"></i>
+                        موافقة
+                    </button>
+                    <button id="cancelApprove" class="flex-1 bg-gray-300 text-gray-700 action-btn">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-service.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Admin Dashboard Manager
+        class AdminDashboard {
+            constructor() {
+                this.currentUser = null;
+                this.branches = {};
+                this.updateRequests = {};
+                this.init();
+            }
+
+            async init() {
+                // التحقق من صلاحية المستخدم
+                this.currentUser = this.getCurrentUser();
+                if (!this.currentUser || this.currentUser.role !== 'admin') {
+                    window.location.href = '../auth/login.html';
+                    return;
+                }
+
+                // انتظار تحميل Firebase
+                await this.waitForFirebase();
+                
+                // تحميل البيانات
+                await this.loadDashboardData();
+                
+                // إعداد المستمعين
+                this.setupEventListeners();
+                
+                console.log('✅ لوحة المدير جاهزة');
+            }
+
+            getCurrentUser() {
+                const userSession = localStorage.getItem('userSession');
+                return userSession ? JSON.parse(userSession) : null;
+            }
+
+            async waitForFirebase() {
+                return new Promise((resolve) => {
+                    const checkFirebase = () => {
+                        if (window.firebaseService && window.firebaseService.getAllBranches) {
+                            console.log('✅ Firebase Service جاهز في لوحة المدير');
+                            resolve();
+                        } else {
+                            console.log('⏳ انتظار Firebase Service...');
+                            setTimeout(checkFirebase, 100);
+                        }
+                    };
+                    checkFirebase();
+                });
+            }
+
+            async loadDashboardData() {
+                try {
+                    console.log('📥 المدير: تحميل بيانات الفروع والطلبات...');
+                    
+                    // جلب بيانات الفروع
+                    if (window.firebaseService && typeof window.firebaseService.getAllBranches === 'function') {
+                        console.log('🔥 جلب بيانات الفروع من firebaseService...');
+                        const branchesResult = await window.firebaseService.getAllBranches();
+                        
+                        if (branchesResult.success) {
+                            this.branches = branchesResult.data;
+                            console.log('✅ تم جلب بيانات الفروع:', this.branches);
+                        } else {
+                            console.warn('⚠️ فشل في جلب الفروع:', branchesResult.error);
+                            this.branches = this.getDefaultBranchesData();
+                        }
+                    } else {
+                        console.log('🔄 استخدام البيانات الافتراضية للفروع');
+                        this.branches = this.getDefaultBranchesData();
+                    }
+
+                    // جلب طلبات التحديث
+                    if (window.firebaseService && typeof window.firebaseService.getPendingRequests === 'function') {
+                        console.log('🔥 جلب الطلبات المعلقة...');
+                        const requestsResult = await window.firebaseService.getPendingRequests();
+                        
+                        if (requestsResult.success) {
+                            this.updateRequests = requestsResult.data;
+                            console.log('✅ تم جلب الطلبات المعلقة:', this.updateRequests);
+                        } else {
+                            console.warn('⚠️ فشل في جلب الطلبات:', requestsResult.error);
+                            this.updateRequests = {};
+                        }
+                    } else {
+                        console.log('🔄 لا توجد طلبات - firebaseService غير متوفر');
+                        this.updateRequests = {};
+                    }
+
+                    // تحديث الإحصائيات
+                    this.updateStatistics();
+
+                    // عرض الطلبات
+                    this.displayUpdateRequests();
+
+                } catch (error) {
+                    console.error('خطأ في تحميل البيانات:', error);
+                    this.showNotification('خطأ في تحميل البيانات', 'error');
+                }
+            }
+            
+            getDefaultBranchesData() {
+                return {
+                    'garb-dammam': {
+                        id: 'garb-dammam',
+                        name: 'فرع غرب الدمام'
+                    },
+                    'sharq-dammam': {
+                        id: 'sharq-dammam', 
+                        name: 'فرع شرق الدمام'
+                    },
+                    'khobar': {
+                        id: 'khobar',
+                        name: 'فرع الخبر'
+                    },
+                    'baqiq': {
+                        id: 'baqiq',
+                        name: 'فرع بقيق'
+                    },
+                    'rafeia': {
+                        id: 'rafeia',
+                        name: 'فرع الرافعية'
+                    }
+                };
+            }
+
+            updateStatistics() {
+                const totalBranches = Object.keys(this.branches).length;
+                const activeBranches = Object.values(this.branches).filter(branch => 
+                    branch.status === 'active'
+                ).length;
+                
+                const pendingRequests = Object.values(this.updateRequests).filter(request => 
+                    request.status === 'pending'
+                ).length;
+
+                const totalBranchesEl = document.getElementById('totalBranches');
+                const activeBranchesEl = document.getElementById('activeBranches');
+                const pendingRequestsEl = document.getElementById('pendingRequests');
+                const totalUsersEl = document.getElementById('totalUsers');
+
+                if (totalBranchesEl) totalBranchesEl.textContent = totalBranches;
+                if (activeBranchesEl) activeBranchesEl.textContent = activeBranches;
+                if (pendingRequestsEl) pendingRequestsEl.textContent = pendingRequests;
+                if (totalUsersEl) totalUsersEl.textContent = '---'; // سنضيف هذا لاحقاً
+            }
+
+            displayUpdateRequests() {
+                const requestsContainer = document.getElementById('requestsList');
+                if (!requestsContainer) {
+                    console.error('عنصر قائمة الطلبات غير موجود');
+                    return;
+                }
+
+                // مسح المحتوى الحالي
+                requestsContainer.innerHTML = '';
+
+                const requests = Object.entries(this.updateRequests)
+                    .filter(([id, request]) => request.status === 'pending')
+                    .sort(([,a], [,b]) => b.timestamp - a.timestamp);
+
+                if (requests.length === 0) {
+                    requestsContainer.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-clipboard-list text-4xl mb-4"></i>
+                            <p class="text-lg font-semibold">لا توجد طلبات معلقة</p>
+                            <p class="text-sm">جميع الطلبات تم معالجتها</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                requests.forEach(([requestId, request]) => {
+                    const requestElement = this.createRequestElement(requestId, request);
+                    requestsContainer.appendChild(requestElement);
+                });
+            }
+
+            createRequestElement(requestId, request) {
+                const div = document.createElement('div');
+                div.className = 'pending-item p-4 rounded-xl mb-4';
+                div.setAttribute('data-request-id', requestId);
+
+                console.log('🔍 createRequestElement - request data:', request);
+
+                const branchName = this.branches[request.branchId]?.name || 'فرع غير محدد';
+                const timeAgo = this.getTimeAgo(request.requestedAt || request.timestamp);
+                
+                // تحويل التغييرات إلى نص مقروء - استخدام requestData بدلاً من changes
+                const changesData = request.requestData || request.changes || {};
+                console.log('🔍 changesData:', changesData);
+                const changesText = this.formatChanges(changesData);
+
+                div.innerHTML = `
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-map-marker-alt text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">${branchName}</h3>
+                                <p class="text-gray-600 text-sm">${request.description || 'طلب تحديث بيانات الفرع'}</p>
+                            </div>
+                        </div>
+                        <span class="status-pending bg-orange-500 text-white text-xs px-2 py-1 rounded-full">معلق</span>
+                    </div>
+                    
+                    <div class="bg-white/50 p-3 rounded-lg mb-3 text-sm">
+                        ${changesText}
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500 text-xs">
+                            <i class="fas fa-calendar ml-1"></i>
+                            ${timeAgo}
+                        </span>
+                        <div class="flex gap-2">
+                            <button class="action-btn view-btn" onclick="adminDashboard.viewBranch('${request.branchId}')">
+                                <i class="fas fa-eye ml-1"></i>
+                                عرض الفرع
+                            </button>
+                            <button class="action-btn reject-btn" onclick="adminDashboard.rejectRequest('${requestId}')">
+                                <i class="fas fa-times ml-1"></i>
+                                رفض
+                            </button>
+                            <button class="action-btn approve-btn" onclick="adminDashboard.approveRequest('${requestId}')">
+                                <i class="fas fa-check ml-1"></i>
+                                موافقة
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                return div;
+            }
+
+            formatChanges(changes) {
+                const changesList = [];
+                
+                // التحقق من وجود البيانات
+                if (!changes || typeof changes !== 'object') {
+                    console.warn('⚠️ formatChanges: البيانات غير صالحة:', changes);
+                    return '<div class="text-gray-500">لا توجد تغييرات</div>';
+                }
+                
+                try {
+                    for (const [field, newValue] of Object.entries(changes)) {
+                        const fieldName = this.getFieldDisplayName(field);
+                        changesList.push(`<div><strong>${fieldName}:</strong> ${newValue}</div>`);
+                    }
+                } catch (error) {
+                    console.error('❌ خطأ في formatChanges:', error, 'البيانات:', changes);
+                    return '<div class="text-red-500">خطأ في عرض التغييرات</div>';
+                }
+                
+                return changesList.length > 0 ? changesList.join('') : '<div class="text-gray-500">لا توجد تغييرات</div>';
+            }
+
+            getFieldDisplayName(field) {
+                const fieldNames = {
+                    'name': 'اسم الفرع',
+                    'twitter': 'تويتر',
+                    'whatsapp': 'واتساب',
+                    'instagram': 'إنستغرام',
+                    'location': 'الموقع',
+                    'email': 'البريد الإلكتروني',
+                    'phone': 'الهاتف',
+                    'store': 'المتجر'
+                };
+                
+                return fieldNames[field] || field;
+            }
+
+            getTimeAgo(timestamp) {
+                const now = Date.now();
+                const diff = now - timestamp;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+
+                if (days > 0) return `منذ ${days} ${days === 1 ? 'يوم' : 'أيام'}`;
+                if (hours > 0) return `منذ ${hours} ${hours === 1 ? 'ساعة' : 'ساعات'}`;
+                if (minutes > 0) return `منذ ${minutes} ${minutes === 1 ? 'دقيقة' : 'دقائق'}`;
+                return 'الآن';
+            }
+
+            async approveRequest(requestId) {
+                this.currentRequestId = requestId;
+                document.getElementById('approvalModal').classList.remove('hidden');
+            }
+
+            async confirmApproval() {
+                if (!this.currentRequestId) return;
+
+                try {
+                    const request = this.updateRequests[this.currentRequestId];
+                    if (!request) {
+                        throw new Error('الطلب غير موجود');
+                    }
+
+                    console.log('🚀 المدير: بدء عملية الموافقة...', request);
+
+                    // استخدام requestData بدلاً من changes
+                    const updateData = request.requestData || request.changes;
+                    
+                    if (!updateData || typeof updateData !== 'object') {
+                        throw new Error('بيانات التحديث غير صالحة');
+                    }
+
+                    console.log('📝 بيانات التحديث:', updateData);
+
+                    // استخدام firebaseService للتحديث
+                    if (window.firebaseService && typeof window.firebaseService.approveUpdateRequest === 'function') {
+                        console.log('🔥 استخدام firebaseService للموافقة...');
+                        const result = await window.firebaseService.approveUpdateRequest(this.currentRequestId);
+                        
+                        if (!result.success) {
+                            throw new Error(result.error || 'فشل في الموافقة');
+                        }
+                    } else {
+                        console.log('🔄 استخدام Firebase مباشرة...');
+                        
+                        // تحديث بيانات الفرع مباشرة
+                        const branchRef = firebase.database().ref(`branches/${request.branchId}`);
+                        await branchRef.update(updateData);
+
+                        // تحديث حالة الطلب
+                        await firebase.database().ref(`updateRequests/${this.currentRequestId}`).update({
+                            status: 'approved',
+                            approvedBy: this.currentUser?.uid || 'admin',
+                            approvedAt: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    }
+
+                    console.log('✅ تمت الموافقة على الطلب بنجاح');
+                    this.showNotification('تم اعتماد الطلب بنجاح', 'success');
+                    
+                    // إعادة تحميل البيانات
+                    await this.loadDashboardData();
+
+                } catch (error) {
+                    console.error('خطأ في الموافقة:', error);
+                    this.showNotification(`خطأ في اعتماد الطلب: ${error.message}`, 'error');
+                } finally {
+                    document.getElementById('approvalModal').classList.add('hidden');
+                    this.currentRequestId = null;
+                }
+            }
+
+            async rejectRequest(requestId) {
+                if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) return;
+
+                try {
+                    // تحديث حالة الطلب
+                    await firebase.database().ref(`updateRequests/${requestId}`).update({
+                        status: 'rejected',
+                        rejectedBy: this.currentUser.uid,
+                        rejectedAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+
+                    this.showNotification('تم رفض الطلب', 'info');
+                    
+                    // إعادة تحميل البيانات
+                    await this.loadDashboardData();
+
+                } catch (error) {
+                    console.error('خطأ في رفض الطلب:', error);
+                    this.showNotification('خطأ في رفض الطلب', 'error');
+                }
+            }
+
+            viewBranch(branchId) {
+                // فتح صفحة الفرع في تبويب جديد
+                window.open(`../branch-template.html?branch=${branchId}`, '_blank');
+            }
+
+            showNotification(message, type = 'info') {
+                // إنشاء عنصر الإشعار
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all transform translate-x-full`;
+                
+                const colors = {
+                    success: 'bg-green-500 text-white',
+                    error: 'bg-red-500 text-white',
+                    info: 'bg-blue-500 text-white',
+                    warning: 'bg-yellow-500 text-white'
+                };
+                
+                const icons = {
+                    success: 'fas fa-check-circle',
+                    error: 'fas fa-exclamation-circle',
+                    info: 'fas fa-info-circle',
+                    warning: 'fas fa-exclamation-triangle'
+                };
+
+                notification.className += ` ${colors[type] || colors.info}`;
+                notification.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="${icons[type] || icons.info}"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+
+                document.body.appendChild(notification);
+
+                // إظهار الإشعار
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+
+                // إخفاء الإشعار بعد 4 ثواني
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 4000);
+            }
+
+            setupEventListeners() {
+                // أحداث النافذة المنبثقة
+                document.getElementById('confirmApprove').addEventListener('click', () => {
+                    this.confirmApproval();
+                });
+
+                document.getElementById('cancelApprove').addEventListener('click', () => {
+                    document.getElementById('approvalModal').classList.add('hidden');
+                    this.currentRequestId = null;
+                });
+
+                // تسجيل الخروج
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    if (confirm('هل تريد تسجيل الخروج؟')) {
+                        localStorage.clear();
+                        window.location.href = '../auth/login.html';
+                    }
+                });
+
+                // إغلاق النافذة المنبثقة عند النقر خارجها
+                document.getElementById('approvalModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'approvalModal') {
+                        document.getElementById('approvalModal').classList.add('hidden');
+                        this.currentRequestId = null;
+                    }
+                });
+
+                // إعداد مستمع للتحديثات المباشرة
+                this.setupRealtimeUpdates();
+
+                // زر التحديث
+                document.getElementById('refreshBtn')?.addEventListener('click', () => {
+                    this.loadDashboardData();
+                });
+            }
+
+            setupRealtimeUpdates() {
+                // مستمع للطلبات الجديدة
+                firebase.database().ref('updateRequests').on('child_added', (snapshot) => {
+                    const request = snapshot.val();
+                    if (request.status === 'pending') {
+                        // إعادة تحميل البيانات عند وصول طلب جديد
+                        this.loadDashboardData();
+                        this.showNotification(`طلب جديد من ${this.branches[request.branchId]?.name || 'فرع غير محدد'}`, 'info');
+                    }
+                });
+
+                // مستمع لتحديث الطلبات
+                firebase.database().ref('updateRequests').on('child_changed', () => {
+                    this.loadDashboardData();
+                });
+            }
+        }
+
+        // تهيئة لوحة المدير
+        let adminDashboard;
+        document.addEventListener('DOMContentLoaded', () => {
+            adminDashboard = new AdminDashboard();
+        });
+    </script>
+</body>
+</html>

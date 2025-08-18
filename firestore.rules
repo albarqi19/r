@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // السماح بقراءة وكتابة جميع البيانات مؤقتاً للتطوير
+    // يُنصح بتحديث هذه القواعد للإنتاج
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    // قواعد محددة للفروع
+    match /branches/{branchId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // قواعد طلبات التحديث
+    match /updateRequests/{requestId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // قواعد المستخدمين
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

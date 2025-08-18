@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المدير - تحفيظ الشرقية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#494776',
+                        secondary: '#4F9DA6',
+                        custom: '#323266',
+                        accent: '#7DCCE5'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        .admin-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(73, 71, 118, 0.1);
+        }
+        .admin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(73, 71, 118, 0.1);
+        }
+        .pending-item {
+            border-right: 4px solid #f59e0b;
+            background: #fef3c7;
+        }
+        .approved-item {
+            border-right: 4px solid #10b981;
+            background: #d1fae5;
+        }
+        .rejected-item {
+            border-right: 4px solid #ef4444;
+            background: #fee2e2;
+        }
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .approve-btn {
+            background: #10b981;
+            color: white;
+        }
+        .approve-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+        .reject-btn {
+            background: #ef4444;
+            color: white;
+        }
+        .reject-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        .view-btn {
+            background: #6b7280;
+            color: white;
+        }
+        .view-btn:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <nav class="bg-primary shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <img src="../Logo.png" alt="تحفيظ الشرقية" class="w-12 h-12 object-contain">
+                    <div>
+                        <h1 class="text-white text-xl font-bold">لوحة المدير</h1>
+                        <p class="text-white/80 text-sm">إدارة جميع الفروع</p>
+                    </div>
+                </div>
+                
+                <!-- Admin Actions -->
+                <div class="flex items-center gap-3">
+                    <span class="text-white/80 text-sm hidden sm:block">مرحباً، المدير</span>
+                    <button id="logoutBtn" class="bg-red-500/80 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm transition-all">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
+            <!-- Total Branches -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">إجمالي الفروع</p>
+                        <p class="text-2xl font-bold text-primary" id="totalBranches">11</p>
+                    </div>
+                    <div class="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-map-marker-alt text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pending Requests -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">طلبات معلقة</p>
+                        <p class="text-2xl font-bold text-orange-600" id="pendingRequests">3</p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Branches -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">فروع نشطة</p>
+                        <p class="text-2xl font-bold text-green-600" id="activeBranches">11</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-check-circle text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- This Month Updates -->
+            <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">تحديثات الشهر</p>
+                        <p class="text-2xl font-bold text-blue-600" id="monthlyUpdates">7</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Pending Approvals -->
+            <div class="lg:col-span-2">
+                <div class="admin-card bg-white rounded-2xl shadow-lg">
+                    <div class="p-6 border-b border-gray-100">
+                        <h2 class="text-xl font-bold text-primary flex items-center gap-2">
+                            <i class="fas fa-tasks"></i>
+                            طلبات التحديث المعلقة
+                        </h2>
+                        <p class="text-gray-500 text-sm mt-1">مراجعة وموافقة تغييرات الفروع</p>
+                    </div>
+                    
+                    <div class="p-6" id="pendingList">
+                        
+                        <!-- Pending Request 1 -->
+                        <div class="pending-item p-4 rounded-xl mb-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-map-marker-alt text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">فرع غرب الدمام</h3>
+                                        <p class="text-gray-600 text-sm">طلب تحديث روابط التواصل</p>
+                                    </div>
+                                </div>
+                                <span class="status-pending text-white text-xs px-2 py-1 rounded-full">معلق</span>
+                            </div>
+                            
+                            <div class="bg-white/50 p-3 rounded-lg mb-3 text-sm">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div><strong>تويتر:</strong> تغيير إلى @NewAccount</div>
+                                    <div><strong>واتساب:</strong> تحديث الرقم</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500 text-xs">
+                                    <i class="fas fa-calendar ml-1"></i>
+                                    منذ 3 ساعات
+                                </span>
+                                <div class="flex gap-2">
+                                    <button class="action-btn view-btn" onclick="viewRequest('garb-dammam', 1)">
+                                        <i class="fas fa-eye ml-1"></i>
+                                        عرض
+                                    </button>
+                                    <button class="action-btn reject-btn" onclick="rejectRequest('garb-dammam', 1)">
+                                        <i class="fas fa-times ml-1"></i>
+                                        رفض
+                                    </button>
+                                    <button class="action-btn approve-btn" onclick="approveRequest('garb-dammam', 1)">
+                                        <i class="fas fa-check ml-1"></i>
+                                        موافقة
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pending Request 2 -->
+                        <div class="pending-item p-4 rounded-xl mb-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-map-marker-alt text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">فرع الخبر</h3>
+                                        <p class="text-gray-600 text-sm">طلب إضافة رابط إنستغرام جديد</p>
+                                    </div>
+                                </div>
+                                <span class="status-pending text-white text-xs px-2 py-1 rounded-full">معلق</span>
+                            </div>
+                            
+                            <div class="bg-white/50 p-3 rounded-lg mb-3 text-sm">
+                                <div><strong>إنستغرام:</strong> إضافة @KhobarTahfeez</div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500 text-xs">
+                                    <i class="fas fa-calendar ml-1"></i>
+                                    منذ 5 ساعات
+                                </span>
+                                <div class="flex gap-2">
+                                    <button class="action-btn view-btn" onclick="viewRequest('khobar', 2)">
+                                        <i class="fas fa-eye ml-1"></i>
+                                        عرض
+                                    </button>
+                                    <button class="action-btn reject-btn" onclick="rejectRequest('khobar', 2)">
+                                        <i class="fas fa-times ml-1"></i>
+                                        رفض
+                                    </button>
+                                    <button class="action-btn approve-btn" onclick="approveRequest('khobar', 2)">
+                                        <i class="fas fa-check ml-1"></i>
+                                        موافقة
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Approved Request -->
+                        <div class="approved-item p-4 rounded-xl mb-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">فرع الرفيعة</h3>
+                                        <p class="text-gray-600 text-sm">تم تحديث رقم الواتساب</p>
+                                    </div>
+                                </div>
+                                <span class="status-approved text-white text-xs px-2 py-1 rounded-full">معتمد</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500 text-xs">
+                                    <i class="fas fa-calendar ml-1"></i>
+                                    منذ يوم واحد
+                                </span>
+                                <span class="text-green-600 text-sm font-semibold">
+                                    <i class="fas fa-check-circle ml-1"></i>
+                                    تم التفعيل
+                                </span>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                
+                <!-- Quick Actions -->
+                <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-rocket"></i>
+                        إجراءات سريعة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-plus"></i>
+                            <span>إضافة فرع جديد</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-cog"></i>
+                            <span>إعدادات النظام</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>تقارير مفصلة</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-3">
+                            <i class="fas fa-download"></i>
+                            <span>تصدير البيانات</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="admin-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-history"></i>
+                        النشاطات الأخيرة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700">تم اعتماد تحديث فرع الرفيعة</p>
+                                <p class="text-xs text-gray-500">منذ ساعة</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700">طلب جديد من فرع بقيق</p>
+                                <p class="text-xs text-gray-500">منذ 3 ساعات</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-700">تسجيل دخول مدير فرع عنك</p>
+                                <p class="text-xs text-gray-500">منذ 5 ساعات</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="admin-card bg-secondary rounded-2xl p-6 shadow-lg text-white">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-server"></i>
+                        حالة النظام
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">قاعدة البيانات</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded">متصلة</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">الخادم</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded">نشط</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">آخر نسخة احتياطية</span>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded">اليوم</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="fixed inset-0 bg-black/50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">تأكيد الموافقة</h3>
+                <p class="text-gray-600 mb-6">هل أنت متأكد من الموافقة على هذا التحديث؟</p>
+                <div class="flex gap-3">
+                    <button id="confirmApprove" class="flex-1 approve-btn">
+                        <i class="fas fa-check ml-2"></i>
+                        موافقة
+                    </button>
+                    <button id="cancelApprove" class="flex-1 bg-gray-300 text-gray-700 action-btn">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/supabase-service.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Admin Dashboard Functions
+        let currentRequestId = null;
+        let currentBranchId = null;
+        
+        // Approve request
+        function approveRequest(branchId, requestId) {
+            currentBranchId = branchId;
+            currentRequestId = requestId;
+            document.getElementById('approvalModal').classList.remove('hidden');
+        }
+        
+        // Reject request  
+        function rejectRequest(branchId, requestId) {
+            if (confirm('هل أنت متأكد من رفض هذا الطلب؟')) {
+                processRequest(branchId, requestId, 'rejected');
+            }
+        }
+        
+        // View request details
+        function viewRequest(branchId, requestId) {
+            window.open(`../branches/${branchId}/`, '_blank');
+        }
+        
+        // Process request (approve/reject)
+        async function processRequest(branchId, requestId, action) {
+            try {
+                // محاكاة معالجة الطلب
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // تحديث واجهة المستخدم
+                const requestElement = document.querySelector(`[onclick*="${requestId}"]`).closest('.pending-item, .approved-item, .rejected-item');
+                
+                if (action === 'approved') {
+                    requestElement.className = requestElement.className.replace('pending-item', 'approved-item');
+                    requestElement.querySelector('.status-pending').className = 'status-approved text-white text-xs px-2 py-1 rounded-full';
+                    requestElement.querySelector('.status-approved').textContent = 'معتمد';
+                    
+                    // إخفاء أزرار الموافقة والرفض
+                    const actionButtons = requestElement.querySelectorAll('.approve-btn, .reject-btn');
+                    actionButtons.forEach(btn => btn.style.display = 'none');
+                    
+                    showNotification('تم اعتماد الطلب بنجاح', 'success');
+                } else {
+                    requestElement.className = requestElement.className.replace('pending-item', 'rejected-item');
+                    requestElement.querySelector('.status-pending').className = 'status-rejected text-white text-xs px-2 py-1 rounded-full';
+                    requestElement.querySelector('.status-rejected').textContent = 'مرفوض';
+                    
+                    showNotification('تم رفض الطلب', 'error');
+                }
+                
+                // تحديث الإحصائيات
+                updateStats();
+                
+            } catch (error) {
+                console.error('خطأ في معالجة الطلب:', error);
+                showNotification('حدث خطأ أثناء معالجة الطلب', 'error');
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const pendingCount = document.querySelectorAll('.pending-item').length;
+            document.getElementById('pendingRequests').textContent = pendingCount;
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            if (window.utils) {
+                if (type === 'success') {
+                    window.utils.showSuccess(message);
+                } else {
+                    window.utils.showError(message);
+                }
+            } else {
+                alert(message);
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Modal events
+            document.getElementById('confirmApprove').addEventListener('click', () => {
+                document.getElementById('approvalModal').classList.add('hidden');
+                if (currentBranchId && currentRequestId) {
+                    processRequest(currentBranchId, currentRequestId, 'approved');
+                }
+            });
+            
+            document.getElementById('cancelApprove').addEventListener('click', () => {
+                document.getElementById('approvalModal').classList.add('hidden');
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('هل تريد تسجيل الخروج؟')) {
+                    localStorage.clear();
+                    window.location.href = '../auth/login.html';
+                }
+            });
+            
+            // Close modal on outside click
+            document.getElementById('approvalModal').addEventListener('click', (e) => {
+                if (e.target.id === 'approvalModal') {
+                    document.getElementById('approvalModal').classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

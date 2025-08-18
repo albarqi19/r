@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>إعداد بيانات Firestore الأولية</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <h1>إعداد البيانات الأولية</h1>
+    <button onclick="setupInitialData()">إعداد البيانات</button>
+    <div id="status"></div>
+
+    <script>
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAll9KSoMAKIkCoPo4hrSaz2dZihqTJnRk",
+            authDomain: "tawasl-8503a.firebaseapp.com",
+            databaseURL: "https://tawasl-8503a-default-rtdb.firebaseio.com",
+            projectId: "tawasl-8503a",
+            storageBucket: "tawasl-8503a.firebasestorage.app",
+            messagingSenderId: "101268526005",
+            appId: "1:101268526005:web:cec8b6b45dab44d08d7ffc",
+            measurementId: "G-5480WBCGR0"
+        };
+
+        // تهيئة Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function setupInitialData() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = 'جاري إعداد البيانات...';
+
+            try {
+                // إضافة فرع غرب الدمام
+                const garbDammamData = {
+                    id: 'garb-dammam',
+                    name: 'فرع غرب الدمام',
+                    twitter: 'https://x.com/Org2Qer',
+                    whatsapp: '966138360356',
+                    instagram: 'https://www.instagram.com/org2qer/',
+                    location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                    email: 'garb@tahfeez-sharqiya.com',
+                    phone: '966138360356',
+                    status: 'active',
+                    region: 'الدمام',
+                    established: '1388',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('branches').doc('garb-dammam').set(garbDammamData);
+                statusDiv.innerHTML += '<br>✅ تم إضافة فرع غرب الدمام';
+
+                // إضافة فرع الخبر
+                const khobarData = {
+                    id: 'khobar',
+                    name: 'فرع الخبر',
+                    twitter: 'https://x.com/khobar_tahfeez',
+                    whatsapp: '966138361234',
+                    instagram: 'https://www.instagram.com/khobar_tahfeez/',
+                    location: 'https://maps.app.goo.gl/example_khobar',
+                    email: 'khobar@tahfeez-sharqiya.com',
+                    phone: '966138361234',
+                    status: 'active',
+                    region: 'الخبر',
+                    established: '1390',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('branches').doc('khobar').set(khobarData);
+                statusDiv.innerHTML += '<br>✅ تم إضافة فرع الخبر';
+
+                // إضافة فرع شرق الدمام
+                const sharqDammamData = {
+                    id: 'sharq-dammam',
+                    name: 'فرع شرق الدمام',
+                    twitter: 'https://x.com/sharq_dammam',
+                    whatsapp: '966138365678',
+                    instagram: 'https://www.instagram.com/sharq_dammam/',
+                    location: 'https://maps.app.goo.gl/example_sharq',
+                    email: 'sharq@tahfeez-sharqiya.com',
+                    phone: '966138365678',
+                    status: 'active',
+                    region: 'الدمام',
+                    established: '1392',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('branches').doc('sharq-dammam').set(sharqDammamData);
+                statusDiv.innerHTML += '<br>✅ تم إضافة فرع شرق الدمام';
+
+                // إضافة فرع بقيق
+                const baqiqData = {
+                    id: 'baqiq',
+                    name: 'فرع بقيق',
+                    twitter: 'https://x.com/baqiq_tahfeez',
+                    whatsapp: '966138369999',
+                    instagram: 'https://www.instagram.com/baqiq_tahfeez/',
+                    location: 'https://maps.app.goo.gl/example_baqiq',
+                    email: 'baqiq@tahfeez-sharqiya.com',
+                    phone: '966138369999',
+                    status: 'active',
+                    region: 'بقيق',
+                    established: '1395',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('branches').doc('baqiq').set(baqiqData);
+                statusDiv.innerHTML += '<br>✅ تم إضافة فرع بقيق';
+
+                // إضافة فرع رافعة
+                const rafeiaData = {
+                    id: 'rafeia',
+                    name: 'فرع رافعة',
+                    twitter: 'https://x.com/rafeia_tahfeez',
+                    whatsapp: '966138367777',
+                    instagram: 'https://www.instagram.com/rafeia_tahfeez/',
+                    location: 'https://maps.app.goo.gl/example_rafeia',
+                    email: 'rafeia@tahfeez-sharqiya.com',
+                    phone: '966138367777',
+                    status: 'active',
+                    region: 'رافعة',
+                    established: '1397',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('branches').doc('rafeia').set(rafeiaData);
+                statusDiv.innerHTML += '<br>✅ تم إضافة فرع رافعة';
+
+                statusDiv.innerHTML += '<br><br>🎉 تم إعداد جميع البيانات الأولية بنجاح!';
+
+            } catch (error) {
+                console.error('خطأ في إعداد البيانات:', error);
+                statusDiv.innerHTML += '<br>❌ خطأ: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

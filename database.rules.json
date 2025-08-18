@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "branches": {
+      ".read": true,
+      ".write": true
+    },
+    "updateRequests": {
+      ".read": true,
+      ".write": true
+    },
+    "users": {
+      ".read": true,
+      ".write": true
+    },
+    "approvals": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

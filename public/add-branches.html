@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <title>إضافة الفروع المفقودة</title>
+    <meta charset="UTF-8">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-service.js"></script>
+</head>
+<body style="font-family: Arial; padding: 20px; background: #f5f5f5;">
+    <h1>إعداد وتحديث جميع الفروع (11 فرع)</h1>
+    <p>سيتم إضافة/تحديث جميع الفروع الـ 11 مع بيانات تسجيل الدخول</p>
+    <div style="margin: 15px 0; padding: 10px; background: #e8f4fd; border-left: 4px solid #2196F3; border-radius: 4px;">
+        <strong>الفروع المشمولة:</strong><br>
+        غرب الدمام، شرق الدمام، الرفيعة، بقيق، عنك، وادي المياه، الخبر، الصرار، رأس تنورة، قرية، التعيرية
+    </div>
+    <button onclick="addMissingBranches()" style="background: #4CAF50; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        إعداد جميع الفروع الـ 11
+    </button>
+    <div id="status" style="margin-top: 20px; padding: 10px; background: white; border-radius: 5px;"></div>
+
+    <script>
+        async function addMissingBranches() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '⏳ جاري إعداد وتحديث جميع الفروع...';
+            
+            try {
+                // انتظار تحميل Firebase Service
+                while (!window.firebaseService || !window.firebaseService.getAllBranches) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                statusDiv.innerHTML += '<br>✅ Firebase Service جاهز';
+                
+                // جلب الفروع الموجودة
+                const existingResult = await window.firebaseService.getAllBranches();
+                const existingBranches = existingResult.success ? existingResult.data : {};
+                
+                statusDiv.innerHTML += `<br>📊 الفروع الموجودة حالياً: ${Object.keys(existingBranches).length}`;
+                statusDiv.innerHTML += '<br>🔄 بدء معالجة جميع الفروع...';
+                
+                // جميع الفروع المطلوب إضافتها أو تحديثها (11 فرع)
+                const allBranches = {
+                    'garb-dammam': {
+                        id: 'garb-dammam',
+                        name: 'فرع غرب الدمام',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360356',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'garb@tahfeez-sharqiya.com',
+                        phone: '966138360356',
+                        status: 'active',
+                        region: 'الدمام',
+                        established: '1388',
+                        loginEmail: 'garb.dammam@tahfeez.com',
+                        loginPassword: 'Garb2024#'
+                    },
+                    'sharq-dammam': {
+                        id: 'sharq-dammam',
+                        name: 'فرع شرق الدمام',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360357',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'sharq@tahfeez-sharqiya.com',
+                        phone: '966138360357',
+                        status: 'active',
+                        region: 'الدمام',
+                        established: '1390',
+                        loginEmail: 'sharq.dammam@tahfeez.com',
+                        loginPassword: 'Sharq2024#'
+                    },
+                    'rafeia': {
+                        id: 'rafeia',
+                        name: 'فرع الرفيعة',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360358',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'rafeia@tahfeez-sharqiya.com',
+                        phone: '966138360358',
+                        status: 'active',
+                        region: 'الرفيعة',
+                        established: '1392',
+                        loginEmail: 'rafeia@tahfeez.com',
+                        loginPassword: 'Rafeia2024#'
+                    },
+                    'baqiq': {
+                        id: 'baqiq',
+                        name: 'فرع بقيق',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360359',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'baqiq@tahfeez-sharqiya.com',
+                        phone: '966138360359',
+                        status: 'active',
+                        region: 'بقيق',
+                        established: '1394',
+                        loginEmail: 'baqiq@tahfeez.com',
+                        loginPassword: 'Baqiq2024#'
+                    },
+                    'anak': {
+                        id: 'anak',
+                        name: 'فرع عنك',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360360',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'anak@tahfeez-sharqiya.com',
+                        phone: '966138360360',
+                        status: 'active',
+                        region: 'عنك',
+                        established: '1395',
+                        loginEmail: 'anak@tahfeez.com',
+                        loginPassword: 'Anak2024#'
+                    },
+                    'wadi-almiyah': {
+                        id: 'wadi-almiyah',
+                        name: 'فرع وادي المياه',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360361',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'wadi@tahfeez-sharqiya.com',
+                        phone: '966138360361',
+                        status: 'active',
+                        region: 'وادي المياه',
+                        established: '1396',
+                        loginEmail: 'wadi.almiyah@tahfeez.com',
+                        loginPassword: 'Wadi2024#'
+                    },
+                    'khobar': {
+                        id: 'khobar',
+                        name: 'فرع الخبر',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360362',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'khobar@tahfeez-sharqiya.com',
+                        phone: '966138360362',
+                        status: 'active',
+                        region: 'الخبر',
+                        established: '1397',
+                        loginEmail: 'khobar@tahfeez.com',
+                        loginPassword: 'Khobar2024#'
+                    },
+                    'sarrar': {
+                        id: 'sarrar',
+                        name: 'فرع الصرار',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360363',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'sarrar@tahfeez-sharqiya.com',
+                        phone: '966138360363',
+                        status: 'active',
+                        region: 'الصرار',
+                        established: '1398',
+                        loginEmail: 'sarrar@tahfeez.com',
+                        loginPassword: 'Sarrar2024#'
+                    },
+                    'ras-tanura': {
+                        id: 'ras-tanura',
+                        name: 'فرع رأس تنورة',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360364',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'ras-tanura@tahfeez-sharqiya.com',
+                        phone: '966138360364',
+                        status: 'active',
+                        region: 'رأس تنورة',
+                        established: '1399',
+                        loginEmail: 'ras.tanura@tahfeez.com',
+                        loginPassword: 'RasTanura2024#'
+                    },
+                    'qarya': {
+                        id: 'qarya',
+                        name: 'فرع قرية',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360365',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'qarya@tahfeez-sharqiya.com',
+                        phone: '966138360365',
+                        status: 'active',
+                        region: 'قرية',
+                        established: '1400',
+                        loginEmail: 'qarya@tahfeez.com',
+                        loginPassword: 'Qarya2024#'
+                    },
+                    'taaeriya': {
+                        id: 'taaeriya',
+                        name: 'فرع التعيرية',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360366',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'taaeriya@tahfeez-sharqiya.com',
+                        phone: '966138360366',
+                        status: 'active',
+                        region: 'التعيرية',
+                        established: '1401',
+                        loginEmail: 'taaeriya@tahfeez.com',
+                        loginPassword: 'Taaeriya2024#'
+                    }
+                };
+                
+                // تحديث أو إضافة جميع الفروع
+                let processedCount = 0;
+                for (const [branchId, branchData] of Object.entries(allBranches)) {
+                    const exists = existingBranches[branchId];
+                    const action = exists ? 'تحديث' : 'إضافة';
+                    
+                    statusDiv.innerHTML += `<br>🔄 ${action} فرع: ${branchData.name}`;
+                    
+                    // استخدام Firebase مباشرة
+                    const db = firebase.firestore();
+                    await db.collection('branches').doc(branchId).set({
+                        ...branchData,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdAt: exists ? existingBranches[branchId].createdAt : firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    
+                    processedCount++;
+                    statusDiv.innerHTML += ` ✅`;
+                }
+                
+                statusDiv.innerHTML += `<br>🎉 تم معالجة ${processedCount} فروع!`;
+                
+                // جلب البيانات المحدثة
+                const updatedResult = await window.firebaseService.getAllBranches();
+                if (updatedResult.success) {
+                    statusDiv.innerHTML += `<br>📊 إجمالي الفروع الآن: ${Object.keys(updatedResult.data).length}`;
+                    
+                    statusDiv.innerHTML += '<br><br><h3>🏢 جميع الفروع مع بيانات تسجيل الدخول:</h3>';
+                    statusDiv.innerHTML += '<table border="1" style="width:100%; border-collapse: collapse; margin-top: 10px;">';
+                    statusDiv.innerHTML += '<tr style="background: #f0f0f0;"><th>الفرع</th><th>الإيميل</th><th>كلمة المرور</th><th>الهاتف</th></tr>';
+                    
+                    for (const [id, branch] of Object.entries(updatedResult.data)) {
+                        const loginEmail = branch.loginEmail || 'غير محدد';
+                        const loginPassword = branch.loginPassword || 'غير محدد';
+                        const phone = branch.phone || 'غير محدد';
+                        
+                        statusDiv.innerHTML += `<tr>
+                            <td style="padding: 8px;"><strong>${branch.name}</strong><br><small>(${id})</small></td>
+                            <td style="padding: 8px;">${loginEmail}</td>
+                            <td style="padding: 8px;">${loginPassword}</td>
+                            <td style="padding: 8px;">${phone}</td>
+                        </tr>`;
+                    }
+                    
+                    statusDiv.innerHTML += '</table>';
+                    
+                    statusDiv.innerHTML += '<br><br><div style="background: #e8f5e8; padding: 10px; border-radius: 5px; border-left: 4px solid #4CAF50;">';
+                    statusDiv.innerHTML += '<h4>📋 معلومات مهمة:</h4>';
+                    statusDiv.innerHTML += '<p>• تم إعداد جميع الفروع مع بيانات تسجيل الدخول</p>';
+                    statusDiv.innerHTML += '<p>• يمكن لكل فرع استخدام إيميله وكلمة المرور للدخول</p>';
+                    statusDiv.innerHTML += '<p>• تأكد من مشاركة هذه البيانات مع مدراء الفروع</p>';
+                    statusDiv.innerHTML += '</div>';
+                }
+                
+            } catch (error) {
+                console.error('خطأ:', error);
+                statusDiv.innerHTML += '<br>❌ خطأ: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - تحفيظ الشرقية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-700">جاري تسجيل الدخول...</p>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="w-full max-w-md">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <img src="../Logo.png" alt="تحفيظ الشرقية" class="w-20 h-20 mx-auto mb-4">
+            <h1 class="text-3xl font-bold text-white mb-2">تسجيل الدخول</h1>
+            <p class="text-blue-100">جمعية تحفيظ القرآن الكريم بالمنطقة الشرقية</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="errorText">خطأ في تسجيل الدخول</span>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span>تم تسجيل الدخول بنجاح، جاري التوجيه...</span>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-6">
+                
+                <!-- Email Field -->
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                        البريد الإلكتروني
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" id="email" name="email" required
+                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="أدخل بريدك الإلكتروني">
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                        كلمة المرور
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" name="password" required
+                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="أدخل كلمة المرور">
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" id="loginBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    تسجيل الدخول
+                </button>
+
+            </form>
+
+            <!-- Test Accounts -->
+            <div class="mt-8 p-4 bg-gray-50 rounded-lg">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">حسابات تجريبية:</h3>
+                <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex justify-between">
+                        <span>المدير العام:</span>
+                        <span class="font-mono">admin@tahfeez.com</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>مدير فرع غرب الدمام:</span>
+                        <span class="font-mono">manager.garb@tahfeez.com</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>مدير فرع شرق الدمام:</span>
+                        <span class="font-mono">manager.sharq@tahfeez.com</span>
+                    </div>
+                    <div class="text-center mt-2 text-xs text-gray-500">
+                        كلمة المرور لجميع الحسابات: admin123456 أو manager123456
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6">
+            <a href="../index.html" class="text-blue-100 hover:text-white transition-colors">
+                <i class="fas fa-arrow-right mr-2"></i>
+                العودة للصفحة الرئيسية
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase Service -->
+    <script src="../assets/js/supabase-service.js"></script>
+
+    <script>
+        class AuthManager {
+            constructor() {
+                this.init();
+            }
+
+            async init() {
+                // انتظار تحميل Supabase
+                await this.waitForSupabase();
+                
+                // إعداد المستمعين للأحداث
+                this.setupEventListeners();
+                
+                console.log('✅ نظام تسجيل الدخول جاهز');
+            }
+
+            async waitForSupabase() {
+                return new Promise((resolve) => {
+                    const checkSupabase = () => {
+                        if (window.supabaseService && window.supabaseService.getAllBranches) {
+                            console.log('✅ Supabase Service جاهز في صفحة تسجيل الدخول');
+                            resolve();
+                        } else {
+                            console.log('⏳ انتظار Supabase Service...');
+                            setTimeout(checkSupabase, 100);
+                        }
+                    };
+                    checkSupabase();
+                });
+            }
+
+            setupEventListeners() {
+                // تسجيل الدخول
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+
+                // إظهار/إخفاء كلمة المرور
+                document.getElementById('togglePassword').addEventListener('click', () => {
+                    this.togglePasswordVisibility();
+                });
+            }
+
+            togglePasswordVisibility() {
+                const passwordField = document.getElementById('password');
+                const toggleIcon = document.querySelector('#togglePassword i');
+                
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    toggleIcon.classList.remove('fa-eye');
+                    toggleIcon.classList.add('fa-eye-slash');
+                } else {
+                    passwordField.type = 'password';
+                    toggleIcon.classList.remove('fa-eye-slash');
+                    toggleIcon.classList.add('fa-eye');
+                }
+            }
+
+            async handleLogin() {
+                console.log('🚀 بدء handleLogin...');
+                
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                console.log('📧 الإيميل المدخل:', email);
+                console.log('🔑 كلمة المرور طولها:', password.length, 'حرف');
+
+                if (!email || !password) {
+                    console.log('❌ حقول فارغة');
+                    this.showError('يرجى ملء جميع الحقول');
+                    return;
+                }
+
+                console.log('⏳ بدء تسجيل الدخول...');
+                this.showLoading(true);
+                this.hideMessages();
+
+                try {
+                    console.log('🔍 استدعاء authenticateUser...');
+                    // البحث عن المستخدم في قاعدة البيانات
+                    const user = await this.authenticateUser(email, password);
+                    
+                    console.log('🎯 نتيجة المصادقة:', user);
+                    
+                    if (user) {
+                        console.log('✅ تم العثور على المستخدم، حفظ الجلسة...');
+                        // حفظ بيانات المستخدم في التخزين المحلي
+                        this.saveUserSession(user);
+                        
+                        // إظهار رسالة النجاح
+                        this.showSuccess(`تم تسجيل الدخول بنجاح! مرحباً بك في ${user.branchName}`);
+                        
+                        // التوجيه بناءً على نوع المستخدم
+                        console.log('🔄 التوجيه بعد ثانيتين...');
+                        setTimeout(() => {
+                            console.log('🎯 تنفيذ التوجيه الآن...');
+                            this.redirectUser(user);
+                        }, 2000);
+                        
+                    } else {
+                        console.log('❌ لم يتم العثور على المستخدم');
+                        this.showError('بيانات تسجيل الدخول غير صحيحة');
+                    }
+
+                } catch (error) {
+                    console.error('❌ خطأ في تسجيل الدخول:', error);
+                    this.showError('حدث خطأ أثناء تسجيل الدخول: ' + error.message);
+                } finally {
+                    console.log('🏁 إنهاء تسجيل الدخول');
+                    this.showLoading(false);
+                }
+            }
+
+            async authenticateUser(email, password) {
+                try {
+                    console.log('🔍 بدء authenticateUser بـ:', email);
+                    
+                    // التحقق من وجود Supabase Service
+                    if (!window.supabaseService) {
+                        console.error('❌ Supabase Service غير متوفر');
+                        throw new Error('Supabase Service غير متوفر');
+                    }
+                    
+                    console.log('✅ Supabase Service متوفر');
+                    
+                    // جلب بيانات الفروع
+                    console.log('📋 جلب بيانات الفروع من Supabase...');
+                    const branchesResult = await window.supabaseService.getAllBranches();
+                    
+                    console.log('📊 نتيجة جلب الفروع:', branchesResult);
+                    
+                    if (!branchesResult.success) {
+                        console.error('❌ خطأ في جلب بيانات الفروع:', branchesResult.error);
+                        throw new Error('خطأ في الوصول لقاعدة البيانات: ' + branchesResult.error);
+                    }
+                    
+                    const branches = branchesResult.data;
+                    console.log('🏢 عدد الفروع الموجودة:', Object.keys(branches).length);
+
+                    if (!branches || Object.keys(branches).length === 0) {
+                        console.log('❌ لا توجد بيانات فروع في قاعدة البيانات');
+                        throw new Error('لا توجد بيانات فروع');
+                    }
+
+                    // البحث عن الفرع بإيميل وكلمة المرور تسجيل الدخول
+                    console.log('🔍 البحث في الفروع...');
+                    for (const branchId in branches) {
+                        const branch = branches[branchId];
+                        console.log(`🔍 فحص فرع ${branch.name}:`);
+                        console.log(`   - إيميل الفرع: ${branch.loginEmail}`);
+                        console.log(`   - إيميل مطلوب: ${email}`);
+                        console.log(`   - كلمة مرور موجودة: ${!!branch.loginPassword}`);
+                        
+                        if (branch.loginEmail === email && branch.loginPassword === password) {
+                            console.log('✅ تم العثور على الفرع المطابق:', branch.name);
+                            
+                            // إنشاء كائن المستخدم
+                            const user = {
+                                uid: branchId,
+                                email: branch.loginEmail,
+                                branchId: branchId,
+                                branchName: branch.name,
+                                region: branch.region,
+                                phone: branch.phone,
+                                role: 'branch_manager',
+                                loginTime: new Date().toISOString()
+                            };
+                            
+                            console.log('👤 بيانات المستخدم المُنشأة:', user);
+                            return user;
+                        }
+                    }
+
+                    console.log('❌ لم يتم العثور على فرع بهذه البيانات');
+                    console.log('🔍 البحث عن إيميل:', email);
+                    console.log('🔍 في الفروع:', Object.keys(branches).map(id => {
+                        const branch = branches[id];
+                        return { id, name: branch.name, email: branch.loginEmail };
+                    }));
+                    
+                    return null; // لم يتم العثور على المستخدم
+
+                } catch (error) {
+                    console.error('❌ خطأ في authenticateUser:', error);
+                    throw error;
+                }
+            }
+
+            saveUserSession(user) {
+                // حفظ بيانات المستخدم في localStorage للـ Dashboard
+                const userSession = {
+                    uid: user.uid,
+                    email: user.email,
+                    branchId: user.branchId,
+                    branchName: user.branchName,
+                    region: user.region,
+                    role: user.role || 'branch_manager',
+                    phone: user.phone,
+                    loginTime: new Date().getTime(),
+                    timestamp: user.loginTime
+                };
+
+                localStorage.setItem('userSession', JSON.stringify(userSession));
+                localStorage.setItem('currentBranch', user.branchId);
+                localStorage.setItem('userToken', 'branch_' + user.branchId + '_' + Date.now());
+                
+                console.log('✅ تم حفظ جلسة الفرع:', userSession);
+            }
+
+            redirectUser(user) {
+                // جميع مدراء الفروع يذهبون إلى Dashboard
+                const redirectUrl = '../dashboard/index.html';
+                
+                console.log(`🚀 توجيه مدير فرع ${user.branchName} إلى Dashboard`);
+                
+                // إضافة رسالة ترحيب
+                this.showSuccess(`مرحباً بك في فرع ${user.branchName}`);
+                
+                // التوجيه بعد ثانيتين
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 2000);
+            }
+
+            showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                const errorText = document.getElementById('errorText');
+                
+                errorText.textContent = message;
+                errorDiv.classList.remove('hidden');
+                
+                // إخفاء الرسالة بعد 5 ثواني
+                setTimeout(() => {
+                    this.hideMessages();
+                }, 5000);
+            }
+
+            showSuccess(message) {
+                const successDiv = document.getElementById('successMessage');
+                const successText = successDiv.querySelector('span');
+                
+                successText.textContent = message;
+                successDiv.classList.remove('hidden');
+            }
+
+            hideMessages() {
+                document.getElementById('errorMessage').classList.add('hidden');
+                document.getElementById('successMessage').classList.add('hidden');
+            }
+
+            showLoading(show) {
+                const spinner = document.getElementById('loadingSpinner');
+                const loginBtn = document.getElementById('loginBtn');
+                
+                if (show) {
+                    spinner.classList.remove('hidden');
+                    loginBtn.disabled = true;
+                    loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    spinner.classList.add('hidden');
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        // تهيئة نظام تسجيل الدخول
+        document.addEventListener('DOMContentLoaded', () => {
+            window.authManager = new AuthManager();
+        });
+    </script>
+</body>
+</html>

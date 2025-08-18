@@ -1,0 +1,33 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#494776" stroke="#4F9DA6" stroke-width="3"/>
+  
+  <!-- Decorative pattern at top -->
+  <g transform="translate(100, 30)">
+    <!-- Diamond shape -->
+    <path d="M0,-15 L8,0 L0,15 L-8,0 Z" fill="#4F9DA6"/>
+    <!-- Small circles -->
+    <circle cx="-15" cy="0" r="3" fill="#4F9DA6"/>
+    <circle cx="15" cy="0" r="3" fill="#4F9DA6"/>
+  </g>
+  
+  <!-- Main Text -->
+  <text x="100" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white">تحفيظ</text>
+  <text x="100" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white">الشرقية</text>
+  
+  <!-- Date at bottom -->
+  <text x="100" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#4F9DA6">منذ ١٣٨٨ هـ</text>
+  
+  <!-- Decorative border pattern at bottom -->
+  <g transform="translate(100, 170)">
+    <rect x="-50" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="-38" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="-26" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="-14" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="-2" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="10" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="22" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="34" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+    <rect x="46" y="0" width="6" height="6" fill="#4F9DA6" rx="1"/>
+  </g>
+</svg>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - تحفيظ الشرقية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#494776',
+                        secondary: '#4F9DA6',
+                        custom: '#323266',
+                        accent: '#7DCCE5'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        .dashboard-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(73, 71, 118, 0.1);
+        }
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(73, 71, 118, 0.1);
+            border-color: rgba(73, 71, 118, 0.2);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #494776;
+            box-shadow: 0 0 0 3px rgba(73, 71, 118, 0.1);
+        }
+        .status-pending {
+            background: #f59e0b;
+        }
+        .status-approved {
+            background: #10b981;
+        }
+        .status-rejected {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <nav class="bg-primary shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <img src="../Logo.png" alt="تحفيظ الشرقية" class="w-12 h-12 object-contain">
+                    <div>
+                        <h1 class="text-white text-xl font-bold">لوحة التحكم</h1>
+                        <p class="text-white/80 text-sm" id="branchTitle">فرع غرب الدمام</p>
+                    </div>
+                </div>
+                
+                <!-- User Actions -->
+                <div class="flex items-center gap-3">
+                    <button id="previewBtn" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all">
+                        <i class="fas fa-eye ml-2"></i>
+                        معاينة الصفحة
+                    </button>
+                    <button id="logoutBtn" class="bg-red-500/80 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm transition-all">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Status Alert -->
+        <div id="statusAlert" class="mb-6 p-4 rounded-xl border-r-4 bg-blue-50 border-primary hidden">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle text-primary ml-3"></i>
+                <div>
+                    <h3 class="text-primary font-semibold">حالة التحديثات</h3>
+                    <p class="text-gray-600 text-sm mt-1" id="statusMessage">جميع البيانات محدثة</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Social Media Links -->
+            <div class="lg:col-span-2">
+                <div class="dashboard-card bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-primary flex items-center gap-2">
+                            <i class="fas fa-share-alt"></i>
+                            روابط التواصل الاجتماعي
+                        </h2>
+                        <span class="status-approved text-white text-xs px-3 py-1 rounded-full">
+                            معتمد
+                        </span>
+                    </div>
+                    
+                    <form id="socialLinksForm" class="space-y-4">
+                        
+                        <!-- Twitter/X -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fab fa-twitter text-blue-500"></i>
+                                رابط تويتر (X)
+                            </label>
+                            <input type="url" id="twitterUrl" 
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="https://x.com/username"
+                                   value="https://x.com/Org2Qer">
+                        </div>
+                        
+                        <!-- Instagram -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fab fa-instagram text-pink-500"></i>
+                                رابط إنستغرام
+                            </label>
+                            <input type="url" id="instagramUrl"
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="https://instagram.com/username"
+                                   value="https://www.instagram.com/org2qer/">
+                        </div>
+                        
+                        <!-- WhatsApp -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fab fa-whatsapp text-green-500"></i>
+                                رقم واتساب
+                            </label>
+                            <input type="tel" id="whatsappNumber"
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="966XXXXXXXXX"
+                                   value="966138360356">
+                            <p class="text-gray-500 text-xs mt-1">أدخل الرقم بالصيغة الدولية بدون علامة +</p>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-red-500"></i>
+                                رابط الموقع الجغرافي
+                            </label>
+                            <input type="url" id="locationUrl"
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="https://maps.google.com/..."
+                                   value="https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9">
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="pt-4">
+                            <button type="submit" 
+                                    class="btn-primary w-full flex items-center justify-center gap-2 py-3 text-base">
+                                <i class="fas fa-save"></i>
+                                <span>حفظ التغييرات</span>
+                                <span id="saveSpinner" class="hidden">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </span>
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                
+                <!-- Quick Stats -->
+                <div class="dashboard-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-simple"></i>
+                        إحصائيات سريعة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600 text-sm">آخر تحديث</span>
+                            <span class="text-primary font-semibold text-sm">منذ يومين</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600 text-sm">حالة الصفحة</span>
+                            <span class="status-approved text-white text-xs px-2 py-1 rounded-full">نشطة</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600 text-sm">التغييرات المعلقة</span>
+                            <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="dashboard-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt"></i>
+                        إجراءات سريعة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-3">
+                            <i class="fas fa-eye text-secondary"></i>
+                            <span class="text-gray-700">معاينة الصفحة</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-3">
+                            <i class="fas fa-history text-secondary"></i>
+                            <span class="text-gray-700">سجل التغييرات</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-3">
+                            <i class="fas fa-question-circle text-secondary"></i>
+                            <span class="text-gray-700">المساعدة</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Support -->
+                <div class="dashboard-card bg-secondary rounded-2xl p-6 shadow-lg text-white">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-headset"></i>
+                        الدعم الفني
+                    </h3>
+                    <p class="text-white/90 text-sm mb-4">
+                        هل تحتاج للمساعدة؟ فريق الدعم متاح لمساعدتك
+                    </p>
+                    <button class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all w-full">
+                        <i class="fas fa-comments ml-2"></i>
+                        تواصل معنا
+                    </button>
+                </div>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/supabase-service.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        class DashboardManager {
+            constructor() {
+                this.currentBranch = this.getBranchFromPath();
+                this.init();
+            }
+            
+            getBranchFromPath() {
+                // يمكن استخراجه من localStorage أو URL parameters
+                return localStorage.getItem('currentBranch') || 'garb-dammam';
+            }
+            
+            async init() {
+                this.setupEventListeners();
+                await this.loadBranchData();
+                this.updateUI();
+            }
+            
+            setupEventListeners() {
+                // حفظ النموذج
+                document.getElementById('socialLinksForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveSocialLinks();
+                });
+                
+                // معاينة الصفحة
+                document.getElementById('previewBtn').addEventListener('click', () => {
+                    window.open(`../branches/${this.currentBranch}/`, '_blank');
+                });
+                
+                // تسجيل الخروج
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    if (confirm('هل تريد تسجيل الخروج؟')) {
+                        localStorage.removeItem('currentBranch');
+                        localStorage.removeItem('userToken');
+                        window.location.href = '../auth/login.html';
+                    }
+                });
+            }
+            
+            async loadBranchData() {
+                // جلب بيانات الفرع
+                if (window.branchManager) {
+                    this.branchData = await window.branchManager.loadBranchData(this.currentBranch);
+                } else {
+                    // استخدام البيانات المحلية مؤقتاً
+                    this.branchData = {
+                        name: 'غرب الدمام',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360356',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9'
+                    };
+                }
+            }
+            
+            updateUI() {
+                if (!this.branchData) return;
+                
+                // تحديث عنوان الفرع
+                document.getElementById('branchTitle').textContent = `فرع ${this.branchData.name}`;
+                
+                // تحديث الحقول
+                document.getElementById('twitterUrl').value = this.branchData.twitter || '';
+                document.getElementById('instagramUrl').value = this.branchData.instagram || '';
+                document.getElementById('whatsappNumber').value = this.branchData.whatsapp || '';
+                document.getElementById('locationUrl').value = this.branchData.location || '';
+            }
+            
+            async saveSocialLinks() {
+                const submitBtn = document.querySelector('#socialLinksForm button[type="submit"]');
+                const spinner = document.getElementById('saveSpinner');
+                
+                // إظهار حالة التحميل
+                submitBtn.disabled = true;
+                spinner.classList.remove('hidden');
+                
+                try {
+                    // جمع البيانات
+                    const formData = {
+                        twitter: document.getElementById('twitterUrl').value,
+                        instagram: document.getElementById('instagramUrl').value,
+                        whatsapp: document.getElementById('whatsappNumber').value,
+                        location: document.getElementById('locationUrl').value,
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    // محاولة الحفظ في Supabase
+                    if (window.supabaseService) {
+                        try {
+                            // إنشاء طلب تحديث للموافقة
+                            const result = await window.supabaseService.createUpdateRequest(
+                                this.currentBranch, 
+                                formData
+                            );
+                            
+                            if (result.success) {
+                                this.showNotification(
+                                    'تم إرسال طلب التحديث للإدارة! سيتم تطبيق التغييرات بعد الموافقة.',
+                                    'success'
+                                );
+                                
+                                // تحديث حالة الصفحة
+                                this.updateStatusToPending();
+                                
+                                // تسجيل الحدث
+                                window.supabaseService.logEvent('update_request_created', {
+                                    branch_id: this.currentBranch,
+                                    request_type: 'social_links'
+                                });
+                                
+                                return;
+                            }
+                        } catch (supabaseError) {
+                            console.log('فشل Supabase، استخدام التخزين المحلي');
+                        }
+                    }
+                    
+                    // Fallback للتخزين المحلي
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    this.showNotification(
+                        'تم حفظ التغييرات محلياً! يرجى التأكد من الاتصال بالإنترنت لمزامنة البيانات.',
+                        'success'
+                    );
+                    
+                    // حفظ محلي
+                    const localData = JSON.parse(localStorage.getItem('branchUpdates') || '{}');
+                    localData[this.currentBranch] = formData;
+                    localStorage.setItem('branchUpdates', JSON.stringify(localData));
+                    
+                } catch (error) {
+                    console.error('خطأ في الحفظ:', error);
+                    this.showNotification('حدث خطأ أثناء حفظ البيانات', 'error');
+                } finally {
+                    // إخفاء حالة التحميل
+                    submitBtn.disabled = false;
+                    spinner.classList.add('hidden');
+                }
+            }
+            
+            updateStatusToPending() {
+                const statusElement = document.querySelector('.status-approved, .status-pending');
+                if (statusElement) {
+                    statusElement.className = 'status-pending text-white text-xs px-3 py-1 rounded-full';
+                    statusElement.textContent = 'في الانتظار';
+                }
+            }
+            
+            showNotification(message, type = 'info') {
+                if (window.utils) {
+                    if (type === 'success') {
+                        window.utils.showSuccess(message);
+                    } else {
+                        window.utils.showError(message);
+                    }
+                } else {
+                    alert(message);
+                }
+            }
+        }
+        
+        // تهيئة لوحة التحكم عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            window.dashboardManager = new DashboardManager();
+        });
+    </script>
+</body>
+</html>

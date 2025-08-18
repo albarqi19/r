@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - تحفيظ الشرقية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#494776',
+                        secondary: '#4F9DA6',
+                        custom: '#323266',
+                        accent: '#7DCCE5'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        .dashboard-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(73, 71, 118, 0.1);
+        }
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(73, 71, 118, 0.1);
+            border-color: rgba(73, 71, 118, 0.2);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #494776;
+            box-shadow: 0 0 0 3px rgba(73, 71, 118, 0.1);
+        }
+        .status-pending {
+            background: #f59e0b;
+        }
+        .status-approved {
+            background: #10b981;
+        }
+        .status-rejected {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <nav class="bg-primary shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <img src="../Logo.png" alt="تحفيظ الشرقية" class="w-12 h-12 object-contain">
+                    <div>
+                        <h1 class="text-white text-xl font-bold">لوحة التحكم</h1>
+                        <p class="text-white/80 text-sm" id="branchTitle">فرع غرب الدمام</p>
+                    </div>
+                </div>
+                
+                <!-- User Actions -->
+                <div class="flex items-center gap-3">
+                    <button id="checkSessionBtn" class="bg-yellow-500/80 hover:bg-yellow-500 text-white px-3 py-2 rounded-lg text-xs transition-all">
+                        <i class="fas fa-user-check ml-1"></i>
+                        تحقق من الجلسة
+                    </button>
+                    <button id="previewBtn" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all">
+                        <i class="fas fa-eye ml-2"></i>
+                        معاينة الصفحة
+                    </button>
+                    <button id="logoutBtn" class="bg-red-500/80 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm transition-all">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Status Alert -->
+        <div id="statusAlert" class="mb-6 p-4 rounded-xl border-r-4 bg-blue-50 border-primary hidden">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle text-primary ml-3"></i>
+                <div>
+                    <h3 class="text-primary font-semibold">حالة التحديثات</h3>
+                    <p class="text-gray-600 text-sm mt-1" id="statusMessage">جميع البيانات محدثة</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Social Media Links -->
+            <div class="lg:col-span-2">
+                <div class="dashboard-card bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-primary flex items-center gap-2">
+                            <i class="fas fa-share-alt"></i>
+                            روابط التواصل الاجتماعي
+                        </h2>
+                        <span class="status-approved text-white text-xs px-3 py-1 rounded-full">
+                            معتمد
+                        </span>
+                    </div>
+                    
+                    <form id="socialLinksForm" class="space-y-4">
+                        
+                        <!-- Twitter/X -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fab fa-twitter text-blue-500"></i>
+                                رابط تويتر (X)
+                            </label>
+                            <input type="url" id="twitterUrl" 
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="https://x.com/username"
+                                   value="https://x.com/Org2Qer">
+                        </div>
+                        
+                        <!-- Instagram -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fab fa-instagram text-pink-500"></i>
+                                رابط إنستغرام
+                            </label>
+                            <input type="url" id="instagramUrl"
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="https://instagram.com/username"
+                                   value="https://www.instagram.com/org2qer/">
+                        </div>
+                        
+                        <!-- WhatsApp -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fab fa-whatsapp text-green-500"></i>
+                                رقم واتساب
+                            </label>
+                            <input type="tel" id="whatsappNumber"
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="966XXXXXXXXX"
+                                   value="966138360356">
+                            <p class="text-gray-500 text-xs mt-1">أدخل الرقم بالصيغة الدولية بدون علامة +</p>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-red-500"></i>
+                                رابط الموقع الجغرافي
+                            </label>
+                            <input type="url" id="locationUrl"
+                                   class="input-field w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none"
+                                   placeholder="https://maps.google.com/..."
+                                   value="https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9">
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="pt-4">
+                            <button type="submit" 
+                                    class="btn-primary w-full flex items-center justify-center gap-2 py-3 text-base">
+                                <i class="fas fa-save"></i>
+                                <span>حفظ التغييرات</span>
+                                <span id="saveSpinner" class="hidden">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </span>
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                
+                <!-- Quick Stats -->
+                <div class="dashboard-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-simple"></i>
+                        إحصائيات سريعة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600 text-sm">آخر تحديث</span>
+                            <span class="text-primary font-semibold text-sm">منذ يومين</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600 text-sm">حالة الصفحة</span>
+                            <span class="status-approved text-white text-xs px-2 py-1 rounded-full">نشطة</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-600 text-sm">التغييرات المعلقة</span>
+                            <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="dashboard-card bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt"></i>
+                        إجراءات سريعة
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-3">
+                            <i class="fas fa-eye text-secondary"></i>
+                            <span class="text-gray-700">معاينة الصفحة</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-3">
+                            <i class="fas fa-history text-secondary"></i>
+                            <span class="text-gray-700">سجل التغييرات</span>
+                        </button>
+                        
+                        <button class="w-full text-right px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-3">
+                            <i class="fas fa-question-circle text-secondary"></i>
+                            <span class="text-gray-700">المساعدة</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Support -->
+                <div class="dashboard-card bg-secondary rounded-2xl p-6 shadow-lg text-white">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                        <i class="fas fa-headset"></i>
+                        الدعم الفني
+                    </h3>
+                    <p class="text-white/90 text-sm mb-4">
+                        هل تحتاج للمساعدة؟ فريق الدعم متاح لمساعدتك
+                    </p>
+                    <button class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all w-full">
+                        <i class="fas fa-comments ml-2"></i>
+                        تواصل معنا
+                    </button>
+                </div>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Fallback للتأكد من وجود firebaseService
+        console.log('🔧 Dashboard: Fallback check for firebaseService...');
+        if (!window.firebaseService) {
+            console.log('⚠️ Dashboard: إنشاء firebaseService fallback');
+            window.firebaseService = {
+                checkSession: function() {
+                    console.log('🔍 Fallback checkSession');
+                    return { hasSession: false, user: null };
+                },
+                createUpdateRequest: function() {
+                    console.log('⚠️ Fallback createUpdateRequest - ستكون متوفرة قريباً');
+                    return Promise.resolve({ success: false, error: 'Service not ready' });
+                }
+            };
+        }
+    </script>
+    <script src="../assets/js/firebase-service.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        class DashboardManager {
+            constructor() {
+                this.currentBranch = this.getBranchFromPath();
+                console.log('🎯 DashboardManager constructor - Firebase Service متوفر؟', !!window.firebaseService);
+                // بدء التهيئة فوراً
+                this.init();
+            }
+            
+            getBranchFromPath() {
+                // يمكن استخراجه من localStorage أو URL parameters
+                return localStorage.getItem('currentBranch') || 'garb-dammam';
+            }
+            
+            async init() {
+                // التحقق من جلسة المستخدم
+                if (!this.checkUserSession()) {
+                    return;
+                }
+                
+                this.setupEventListeners();
+                await this.loadBranchData();
+                this.updateUI();
+                
+                // التحقق من وجود طلبات معلقة
+                this.checkPendingRequests();
+            }
+
+            checkUserSession() {
+                const userSession = localStorage.getItem('userSession');
+                if (!userSession) {
+                    alert('يجب تسجيل الدخول أولاً');
+                    window.location.href = '../auth/login.html';
+                    return false;
+                }
+
+                const user = JSON.parse(userSession);
+                if (user.role !== 'branch_manager' && user.role !== 'admin') {
+                    alert('غير مصرح لك بالوصول لهذه الصفحة');
+                    window.location.href = '../auth/login.html';
+                    return false;
+                }
+
+                // حفظ معرف الفرع من بيانات المستخدم إذا كان مدير فرع
+                if (user.role === 'branch_manager' && user.branchId) {
+                    localStorage.setItem('currentBranch', user.branchId);
+                    this.currentBranch = user.branchId;
+                }
+
+                return true;
+            }
+
+            // وظيفة للتحقق من حالة الجلسة وعرضها
+            checkSessionStatus() {
+                const userSession = localStorage.getItem('userSession');
+                const currentBranch = localStorage.getItem('currentBranch');
+                const userToken = localStorage.getItem('userToken');
+
+                const sessionInfo = {
+                    userSession: userSession ? JSON.parse(userSession) : null,
+                    currentBranch: currentBranch,
+                    userToken: userToken
+                };
+
+                console.log('=== معلومات الجلسة الحالية ===', sessionInfo);
+                
+                // عرض تنبيه للمستخدم
+                const sessionText = userSession ? 
+                    `المستخدم: ${JSON.parse(userSession).username}\nالصلاحية: ${JSON.parse(userSession).role}\nالفرع: ${currentBranch || 'غير محدد'}` :
+                    'لا توجد جلسة مستخدم';
+                    
+                alert(`معلومات الجلسة:\n${sessionText}`);
+            }
+            
+            setupEventListeners() {
+                // حفظ النموذج
+                document.getElementById('socialLinksForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveSocialLinks();
+                });
+
+                // التحقق من الجلسة
+                document.getElementById('checkSessionBtn').addEventListener('click', () => {
+                    this.checkSessionStatus();
+                });
+                
+                // معاينة الصفحة
+                document.getElementById('previewBtn').addEventListener('click', () => {
+                    window.open(`../branches/${this.currentBranch}/`, '_blank');
+                });
+                
+                // تسجيل الخروج
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    if (confirm('هل تريد تسجيل الخروج؟')) {
+                        localStorage.removeItem('currentBranch');
+                        localStorage.removeItem('userToken');
+                        window.location.href = '../auth/login.html';
+                    }
+                });
+            }
+            
+            async loadBranchData() {
+                console.log('📥 تحميل بيانات الفرع:', this.currentBranch);
+                
+                try {
+                    // محاولة جلب البيانات من Firebase
+                    if (window.firebaseService && typeof window.firebaseService.getBranch === 'function') {
+                        console.log('🔥 جلب البيانات من Firebase...');
+                        const result = await window.firebaseService.getBranch(this.currentBranch);
+                        
+                        if (result.success && result.data) {
+                            console.log('✅ تم جلب البيانات من Firebase:', result.data);
+                            this.branchData = result.data;
+                            return;
+                        } else {
+                            console.error('❌ فشل في جلب البيانات من Firebase:', result.error);
+                            throw new Error('فشل في تحميل البيانات: ' + result.error);
+                        }
+                    } else {
+                        console.error('❌ Firebase Service غير متوفر');
+                        throw new Error('Firebase Service غير متوفر');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ خطأ في تحميل بيانات الفرع:', error);
+                    // عرض رسالة خطأ للمستخدم
+                    document.body.innerHTML = `
+                        <div class="min-h-screen bg-gray-100 flex items-center justify-center">
+                            <div class="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+                                <div class="text-red-500 mb-4">
+                                    <svg class="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">خطأ في تحميل البيانات</h3>
+                                <p class="text-gray-600 mb-4">${error.message}</p>
+                                <button onclick="location.reload()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                    إعادة المحاولة
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    // بيانات افتراضية في حالة الخطأ
+                    this.branchData = {
+                        id: this.currentBranch,
+                        name: 'فرع غير محدد',
+                        twitter: '',
+                        whatsapp: '',
+                        instagram: '',
+                        location: ''
+                    };
+                }
+            }
+            
+            updateUI() {
+                if (!this.branchData) return;
+                
+                // تحديث عنوان الفرع
+                document.getElementById('branchTitle').textContent = `فرع ${this.branchData.name}`;
+                
+                // تحديث الحقول
+                document.getElementById('twitterUrl').value = this.branchData.twitter || '';
+                document.getElementById('instagramUrl').value = this.branchData.instagram || '';
+                document.getElementById('whatsappNumber').value = this.branchData.whatsapp || '';
+                document.getElementById('locationUrl').value = this.branchData.location || '';
+            }
+            
+            // وظيفة انتظار تحميل Firebase
+            async waitForFirebase(maxWaitTime = 3000) {
+                console.log('🔍 waitForFirebase: بدء الفحص...');
+                
+                // التحقق الفوري
+                if (window.firebaseService) {
+                    if (typeof window.firebaseService.createUpdateRequest === 'function') {
+                        console.log('✅ Firebase Service جاهز مسبقاً - createUpdateRequest متوفر');
+                        return true;
+                    } else if (window.firebaseService.checkSession) {
+                        console.log('⚡ Firebase Service موجود لكن الدوال لم تحدث بعد - سنحاول المتابعة');
+                        return true;
+                    }
+                }
+                
+                console.log('🔍 window.firebaseService موجود؟', !!window.firebaseService);
+                if (window.firebaseService) {
+                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.firebaseService.createUpdateRequest);
+                }
+                
+                return new Promise((resolve) => {
+                    const startTime = Date.now();
+                    
+                    const checkFirebase = () => {
+                        if (window.firebaseService) {
+                            if (typeof window.firebaseService.createUpdateRequest === 'function') {
+                                console.log('✅ Firebase Service جاهز للاستخدام - createUpdateRequest متوفر');
+                                resolve(true);
+                                return;
+                            } else {
+                                // إذا كان Firebase موجود لكن الدوال لم تحدث بعد
+                                if (Date.now() - startTime > 1000) {
+                                    console.log('⚡ Firebase موجود لكن الدوال لم تحدث - سنتابع');
+                                    resolve(true);
+                                    return;
+                                }
+                            }
+                        }
+                        
+                        if (Date.now() - startTime > maxWaitTime) {
+                            console.error('❌ انتهت مهلة انتظار Firebase Service');
+                            resolve(false);
+                            return;
+                        }
+                        
+                        setTimeout(checkFirebase, 100);
+                    };
+                    
+                    checkFirebase();
+                });
+            }
+
+            async saveSocialLinks() {
+                // Debug: التحقق من الجلسة
+                const userSession = localStorage.getItem('userSession');
+                console.log('🔍 التحقق من الجلسة:', userSession ? 'موجودة' : 'غير موجودة');
+                if (userSession) {
+                    const user = JSON.parse(userSession);
+                    console.log('👤 بيانات المستخدم:', user);
+                }
+
+                const submitBtn = document.querySelector('#socialLinksForm button[type="submit"]');
+                const spinner = document.getElementById('saveSpinner');
+                
+                // إظهار حالة التحميل
+                submitBtn.disabled = true;
+                spinner.classList.remove('hidden');
+                
+                try {
+                    // جمع البيانات
+                    const formData = {
+                        twitter: document.getElementById('twitterUrl').value,
+                        instagram: document.getElementById('instagramUrl').value,
+                        whatsapp: document.getElementById('whatsappNumber').value,
+                        location: document.getElementById('locationUrl').value,
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    // انتظار تحميل Firebase Service
+                    console.log('⏳ التحقق من جاهزية Firebase...');
+                    const firebaseReady = await this.waitForFirebase();
+                    
+                    if (firebaseReady && window.firebaseService) {
+                        let result = null;
+                        try {
+                            console.log('🚀 dashboard: بدء عملية حفظ Firebase...');
+                            
+                            // التحقق من وجود دالة createUpdateRequest
+                            if (typeof window.firebaseService.createUpdateRequest === 'function') {
+                                console.log('✅ createUpdateRequest متوفرة - إنشاء طلب التحديث');
+                                result = await window.firebaseService.createUpdateRequest(
+                                    this.currentBranch, 
+                                    formData
+                                );
+                            } else {
+                                console.warn('⚠️ createUpdateRequest غير متوفرة - محاولة استدعاءها مباشرة');
+                                // محاولة استدعاءها مباشرة
+                                result = await window.firebaseService.createUpdateRequest(
+                                    this.currentBranch, 
+                                    formData
+                                );
+                            }
+                            
+                            console.log('📋 dashboard: نتيجة createUpdateRequest:', result);
+                            
+                            if (result.success) {
+                                console.log('✅ dashboard: نجح Firebase - إرسال الإشعار');
+                                this.showNotification(
+                                    'تم إرسال طلب التحديث للإدارة! سيتم تطبيق التغييرات بعد الموافقة.',
+                                    'success'
+                                );
+                                
+                                // تحديث حالة الصفحة
+                                this.updateStatusToPending();
+                                
+                                // تسجيل الحدث
+                                window.firebaseService.logEvent('update_request_created', {
+                                    branch_id: this.currentBranch,
+                                    request_type: 'social_links'
+                                });
+                                
+                                return;
+                            } else {
+                                console.error('❌ dashboard: فشل Firebase - result.success = false');
+                                console.error('❌ dashboard: خطأ Firebase:', result.error);
+                                // سنذهب للـ fallback
+                            }
+                        } catch (firebaseError) {
+                            console.error('❌ dashboard: استثناء Firebase:', firebaseError);
+                            console.log('🔄 dashboard: التبديل للتخزين المحلي');
+                        }
+                    } else {
+                        console.warn('⚠️ dashboard: firebaseService غير متوفر');
+                    }
+                    
+                    // Fallback للتخزين المحلي
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    this.showNotification(
+                        'تم حفظ التغييرات محلياً! يرجى التأكد من الاتصال بالإنترنت لمزامنة البيانات.',
+                        'success'
+                    );
+                    
+                    // حفظ محلي
+                    const localData = JSON.parse(localStorage.getItem('branchUpdates') || '{}');
+                    localData[this.currentBranch] = formData;
+                    localStorage.setItem('branchUpdates', JSON.stringify(localData));
+                    
+                } catch (error) {
+                    console.error('خطأ في الحفظ:', error);
+                    this.showNotification('حدث خطأ أثناء حفظ البيانات', 'error');
+                } finally {
+                    // إخفاء حالة التحميل
+                    submitBtn.disabled = false;
+                    spinner.classList.add('hidden');
+                }
+            }
+            
+            updateStatusToPending() {
+                const statusElement = document.querySelector('.status-approved, .status-pending');
+                if (statusElement) {
+                    statusElement.className = 'status-pending text-white text-xs px-3 py-1 rounded-full';
+                    statusElement.textContent = 'في الانتظار';
+                }
+                
+                // حفظ حالة الانتظار في localStorage
+                const pendingStatus = {
+                    branchId: this.currentBranch,
+                    status: 'pending',
+                    timestamp: Date.now(),
+                    message: 'يوجد طلب تحديث في الانتظار'
+                };
+                
+                let pendingRequests = JSON.parse(localStorage.getItem('pendingRequests') || '{}');
+                pendingRequests[this.currentBranch] = pendingStatus;
+                localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
+                
+                console.log('💾 تم حفظ حالة الانتظار:', pendingStatus);
+            }
+            
+            checkPendingRequests() {
+                const pendingRequests = JSON.parse(localStorage.getItem('pendingRequests') || '{}');
+                const currentPending = pendingRequests[this.currentBranch];
+                
+                if (currentPending && currentPending.status === 'pending') {
+                    console.log('🔍 تم العثور على طلب معلق:', currentPending);
+                    
+                    // التحقق إذا كان الطلب حديث (خلال آخر 24 ساعة)
+                    const hoursSinceRequest = (Date.now() - currentPending.timestamp) / (1000 * 60 * 60);
+                    if (hoursSinceRequest < 24) {
+                        console.log('⏳ تطبيق حالة الانتظار على الواجهة');
+                        
+                        // تطبيق حالة الانتظار على الواجهة
+                        const statusElement = document.querySelector('.status-approved, .status-pending');
+                        if (statusElement) {
+                            statusElement.className = 'status-pending text-white text-xs px-3 py-1 rounded-full';
+                            statusElement.textContent = 'في الانتظار';
+                        }
+                        
+                        // إضافة رسالة تنبيه
+                        this.showNotification('يوجد طلب تحديث في الانتظار للموافقة عليه من الإدارة', 'info');
+                    } else {
+                        console.log('🗑️ الطلب قديم - حذف من localStorage');
+                        delete pendingRequests[this.currentBranch];
+                        localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
+                    }
+                }
+            }
+            
+            showNotification(message, type = 'info') {
+                if (window.utils) {
+                    if (type === 'success') {
+                        window.utils.showSuccess(message);
+                    } else {
+                        window.utils.showError(message);
+                    }
+                } else {
+                    alert(message);
+                }
+            }
+        }
+        
+        // تهيئة لوحة التحكم عند تحميل الصفحة
+        window.addEventListener('load', async () => {
+            console.log('🔄 Page loaded - بدء تهيئة Dashboard...');
+            console.log('🔍 جميع scripts في head:', Array.from(document.querySelectorAll('script')).map(s => s.src));
+            console.log('🔍 هل تم تحميل Firebase في window؟', !!window.firebase);
+            console.log('🔍 هل تم إنشاء firebaseService؟', !!window.firebaseService);
+            
+            // انتظار تحميل Firebase Service
+            let attempts = 0;
+            const maxAttempts = 50; // 5 ثواني
+            
+            while (attempts < maxAttempts) {
+                if (window.firebaseService) {
+                    console.log('✅ window.firebaseService موجود - التحقق من الدوال...');
+                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.firebaseService.createUpdateRequest);
+                    console.log('🔍 getAllBranches متوفر؟', typeof window.firebaseService.getAllBranches);
+                    
+                    // التحقق من وجود أي دالة Firebase أو إذا كان Firebase جاهز
+                    if (window.firebaseService.createUpdateRequest || 
+                        window.firebaseService.getAllBranches || 
+                        (window.firebaseService.checkSession && attempts > 10)) {
+                        console.log('✅ Firebase Service متوفر - إنشاء Dashboard Manager');
+                        window.dashboardManager = new DashboardManager();
+                        return;
+                    }
+                } else {
+                    console.log(`⏳ window.firebaseService غير موجود - محاولة ${attempts + 1}/${maxAttempts}`);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            console.error('❌ لم يتم تحميل Firebase Service - إنشاء Dashboard بدون Firebase');
+            window.dashboardManager = new DashboardManager();
+        });
+    </script>
+</body>
+</html>

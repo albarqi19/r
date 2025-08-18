@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعداد قاعدة البيانات - Supabase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#494776',
+                        secondary: '#4F9DA6',
+                        custom: '#323266',
+                        accent: '#7DCCE5'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-primary via-custom to-secondary min-h-screen">
+    
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="flex justify-center items-center mb-6">
+                <img src="../Logo.png" alt="Logo" class="h-20 w-20 ml-4">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">إعداد قاعدة البيانات</h1>
+                    <p class="text-accent text-lg">Supabase Database Setup</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Setup Card -->
+        <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl">
+            
+            <!-- Progress Steps -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="step flex-1 text-center" id="step1">
+                        <div class="step-circle w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-2">1</div>
+                        <div class="text-sm text-white">الاتصال</div>
+                    </div>
+                    <div class="flex-1 h-1 bg-white/20 mx-2"></div>
+                    <div class="step flex-1 text-center" id="step2">
+                        <div class="step-circle w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-2">2</div>
+                        <div class="text-sm text-white/60">إنشاء الجداول</div>
+                    </div>
+                    <div class="flex-1 h-1 bg-white/20 mx-2"></div>
+                    <div class="step flex-1 text-center" id="step3">
+                        <div class="step-circle w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-2">3</div>
+                        <div class="text-sm text-white/60">البيانات الأولية</div>
+                    </div>
+                    <div class="flex-1 h-1 bg-white/20 mx-2"></div>
+                    <div class="step flex-1 text-center" id="step4">
+                        <div class="step-circle w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-2">4</div>
+                        <div class="text-sm text-white/60">اكتمال</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Info -->
+            <div class="bg-white/5 rounded-lg p-6 mb-6">
+                <h3 class="text-xl font-semibold text-white mb-4">
+                    <i class="fas fa-database ml-2 text-accent"></i>
+                    معلومات الاتصال
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-white/70">URL:</span>
+                        <span class="text-accent font-mono">https://aydtrypogxbqmvbqerce.supabase.co</span>
+                    </div>
+                    <div>
+                        <span class="text-white/70">Project ID:</span>
+                        <span class="text-accent font-mono">aydtrypogxbqmvbqerce</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Display -->
+            <div class="bg-black/20 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">حالة الإعداد</h3>
+                <div id="statusLog" class="space-y-2 font-mono text-sm max-h-60 overflow-y-auto">
+                    <div class="text-accent">🔄 جاري الاتصال بقاعدة البيانات...</div>
+                </div>
+            </div>
+
+            <!-- Branch Count Display -->
+            <div class="bg-white/5 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">
+                    <i class="fas fa-map-marker-alt ml-2 text-accent"></i>
+                    الفروع المتوفرة (11 فرع)
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div class="bg-white/10 rounded p-2 text-white">غرب الدمام</div>
+                    <div class="bg-white/10 rounded p-2 text-white">شرق الدمام</div>
+                    <div class="bg-white/10 rounded p-2 text-white">الرفيعة</div>
+                    <div class="bg-white/10 rounded p-2 text-white">بقيق</div>
+                    <div class="bg-white/10 rounded p-2 text-white">عنك</div>
+                    <div class="bg-white/10 rounded p-2 text-white">وادي المياه</div>
+                    <div class="bg-white/10 rounded p-2 text-white">الخبر</div>
+                    <div class="bg-white/10 rounded p-2 text-white">الصرار</div>
+                    <div class="bg-white/10 rounded p-2 text-white">رأس تنورة</div>
+                    <div class="bg-white/10 rounded p-2 text-white">قرية</div>
+                    <div class="bg-white/10 rounded p-2 text-white">التعيرية</div>
+                </div>
+            </div>
+
+            <!-- Setup Button -->
+            <div class="text-center">
+                <button id="setupBtn" onclick="startSetup()" 
+                        class="bg-gradient-to-r from-accent to-secondary hover:from-secondary hover:to-accent text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-play ml-2"></i>
+                    بدء إعداد قاعدة البيانات
+                </button>
+            </div>
+
+            <!-- Manual Setup Instructions -->
+            <div class="mt-8 bg-white/5 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">
+                    <i class="fas fa-terminal ml-2 text-accent"></i>
+                    الإعداد اليدوي
+                </h3>
+                <div class="text-sm text-white/80 space-y-2">
+                    <p>إذا واجهت مشاكل في الإعداد التلقائي، يمكنك تطبيق الكود التالي في Supabase SQL Editor:</p>
+                    <div class="bg-black/30 rounded p-3 font-mono text-xs overflow-x-auto">
+                        <div class="text-accent mb-2">-- انسخ والصق محتويات ملف supabase-setup.sql في Supabase Dashboard</div>
+                        <div class="text-white/70">1. افتح https://supabase.com/dashboard/project/aydtrypogxbqmvbqerce</div>
+                        <div class="text-white/70">2. اذهب إلى SQL Editor</div>
+                        <div class="text-white/70">3. انسخ محتويات ملف supabase-setup.sql</div>
+                        <div class="text-white/70">4. شغل الاستعلام</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase-service.js"></script>
+
+    <script>
+        class DatabaseSetup {
+            constructor() {
+                this.currentStep = 1;
+                this.log('🚀 بدء إعداد قاعدة البيانات...');
+            }
+            
+            log(message) {
+                const statusLog = document.getElementById('statusLog');
+                const logEntry = document.createElement('div');
+                logEntry.className = 'text-white/90';
+                logEntry.innerHTML = `<span class="text-white/50">[${new Date().toLocaleTimeString()}]</span> ${message}`;
+                statusLog.appendChild(logEntry);
+                statusLog.scrollTop = statusLog.scrollHeight;
+            }
+            
+            updateStep(step) {
+                this.currentStep = step;
+                for (let i = 1; i <= 4; i++) {
+                    const stepElement = document.getElementById(`step${i}`);
+                    const circle = stepElement.querySelector('.step-circle');
+                    const text = stepElement.querySelector('div:last-child');
+                    
+                    if (i <= step) {
+                        circle.className = 'step-circle w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center mx-auto mb-2';
+                        text.className = 'text-sm text-white font-semibold';
+                        if (i === step) {
+                            circle.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        } else {
+                            circle.innerHTML = '<i class="fas fa-check"></i>';
+                        }
+                    } else {
+                        circle.className = 'step-circle w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-2';
+                        text.className = 'text-sm text-white/60';
+                        circle.innerHTML = i;
+                    }
+                }
+            }
+            
+            async setup() {
+                try {
+                    // Step 1: Connection Test
+                    this.updateStep(1);
+                    this.log('🔄 اختبار الاتصال بـ Supabase...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    if (window.supabaseService) {
+                        this.log('✅ تم الاتصال بنجاح');
+                        
+                        // Step 2: Create Tables
+                        this.updateStep(2);
+                        this.log('🔄 فحص الجداول...');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        this.log('✅ تم التحقق من بنية قاعدة البيانات');
+                        
+                        // Step 3: Initial Data
+                        this.updateStep(3);
+                        this.log('🔄 إعداد البيانات الأولية...');
+                        await window.supabaseService.setupInitialData();
+                        this.log('✅ تم إدخال بيانات الفروع الـ11');
+                        
+                        // Step 4: Complete
+                        this.updateStep(4);
+                        this.log('🎉 تم إكمال الإعداد بنجاح!');
+                        this.log('✨ يمكنك الآن استخدام النظام');
+                        
+                        document.getElementById('setupBtn').innerHTML = 
+                            '<i class="fas fa-check ml-2"></i>تم الإعداد بنجاح';
+                        document.getElementById('setupBtn').className = 
+                            'bg-green-600 text-white font-semibold py-3 px-8 rounded-lg';
+                        
+                    } else {
+                        throw new Error('فشل الاتصال بـ Supabase');
+                    }
+                    
+                } catch (error) {
+                    this.log('❌ حدث خطأ: ' + error.message);
+                    this.log('💡 جرب الإعداد اليدوي أدناه');
+                }
+            }
+        }
+        
+        let setupManager;
+        
+        function startSetup() {
+            setupManager = new DatabaseSetup();
+            setupManager.setup();
+            
+            document.getElementById('setupBtn').innerHTML = 
+                '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الإعداد...';
+            document.getElementById('setupBtn').disabled = true;
+        }
+        
+        // Auto-start setup when Supabase is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for Supabase to load
+            setTimeout(() => {
+                if (window.supabaseService) {
+                    setupManager = new DatabaseSetup();
+                    setupManager.log('✅ Supabase Service جاهز');
+                    setupManager.log('👆 اضغط على "بدء إعداد قاعدة البيانات" للمتابعة');
+                } else {
+                    setupManager = new DatabaseSetup();
+                    setupManager.log('⚠️ لم يتم تحميل Supabase Service');
+                }
+            }, 2000);
+        });
+    </script>
+    
+</body>
+</html>

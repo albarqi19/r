@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار قاعدة البيانات Supabase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8 text-blue-600">🧪 اختبار قاعدة البيانات Supabase</h1>
+        
+        <!-- إحصائيات -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-700">الفروع</h3>
+                <p id="branchCount" class="text-3xl font-bold text-blue-500">...</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-700">حالة الاتصال</h3>
+                <p id="connectionStatus" class="text-3xl font-bold">...</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-700">آخر تحديث</h3>
+                <p id="lastUpdate" class="text-sm text-gray-500">...</p>
+            </div>
+        </div>
+
+        <!-- أزرار الاختبار -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">🔧 أدوات الاختبار</h2>
+            <div class="flex flex-wrap gap-4">
+                <button onclick="testConnection()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                    اختبار الاتصال
+                </button>
+                <button onclick="loadBranches()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    تحميل الفروع
+                </button>
+                <button onclick="testInsert()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">
+                    اختبار الإدراج
+                </button>
+                <button onclick="clearOutput()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    مسح النتائج
+                </button>
+            </div>
+        </div>
+
+        <!-- قائمة الفروع -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">🏢 قائمة الفروع</h2>
+            <div id="branchesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-gray-500">اضغط على "تحميل الفروع" لعرض البيانات...</p>
+            </div>
+        </div>
+
+        <!-- منطقة النتائج -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">📋 نتائج الاختبار</h2>
+            <div id="output" class="bg-gray-50 p-4 rounded max-h-96 overflow-y-auto">
+                <p class="text-gray-500">لا توجد نتائج بعد...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://aydtrypogxbqmvbqerce.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZHRyeXBvZ3hicW12YnFlcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1MDY1ODMsImV4cCI6MjA3MTA4MjU4M30.J_bb8_J3eYW5XQ2D3oXLId8bHO4vYW5j9ZwdtUlZ0CA';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            const color = type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-blue-600';
+            
+            output.innerHTML += `<div class="mb-2"><span class="text-gray-400">${timestamp}</span> <span class="${color}">${message}</span></div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '<p class="text-gray-500">تم مسح النتائج...</p>';
+        }
+
+        async function testConnection() {
+            log('🔗 اختبار الاتصال بـ Supabase...');
+            try {
+                const { data, error } = await supabase
+                    .from('branches')
+                    .select('count', { count: 'exact', head: true });
+
+                if (error) throw error;
+
+                document.getElementById('connectionStatus').innerHTML = '<span class="text-green-500">متصل ✅</span>';
+                log('✅ الاتصال ناجح!', 'success');
+                log(`📊 إجمالي السجلات: ${data || 'غير معروف'}`);
+                
+            } catch (error) {
+                document.getElementById('connectionStatus').innerHTML = '<span class="text-red-500">منقطع ❌</span>';
+                log(`❌ فشل الاتصال: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadBranches() {
+            log('📥 تحميل بيانات الفروع...');
+            try {
+                const { data: branches, error } = await supabase
+                    .from('branches')
+                    .select('*')
+                    .order('name');
+
+                if (error) throw error;
+
+                document.getElementById('branchCount').textContent = branches.length;
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ar-SA');
+
+                const branchesContainer = document.getElementById('branchesList');
+                branchesContainer.innerHTML = '';
+
+                branches.forEach(branch => {
+                    const branchCard = document.createElement('div');
+                    branchCard.className = 'bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border';
+                    branchCard.innerHTML = `
+                        <h3 class="font-bold text-blue-700 mb-2">${branch.name}</h3>
+                        <p class="text-sm text-gray-600 mb-1">📍 ${branch.region}</p>
+                        <p class="text-sm text-gray-600 mb-1">📞 ${branch.phone}</p>
+                        <p class="text-sm text-gray-600">📧 ${branch.email}</p>
+                        <div class="mt-2">
+                            <span class="inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded">${branch.status}</span>
+                            <span class="inline-block bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded ml-1">${branch.established}</span>
+                        </div>
+                    `;
+                    branchesContainer.appendChild(branchCard);
+                });
+
+                log(`✅ تم تحميل ${branches.length} فرع بنجاح!`, 'success');
+                
+            } catch (error) {
+                log(`❌ فشل تحميل الفروع: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInsert() {
+            log('🧪 اختبار إدراج طلب تحديث...');
+            try {
+                const testRequest = {
+                    branch_id: 'garb-dammam',
+                    request_data: {
+                        twitter: 'https://x.com/test_update',
+                        whatsapp: '966500000000',
+                        testField: 'اختبار التحديث'
+                    },
+                    status: 'pending'
+                };
+
+                const { data, error } = await supabase
+                    .from('update_requests')
+                    .insert([testRequest])
+                    .select();
+
+                if (error) throw error;
+
+                log(`✅ تم إدراج طلب تحديث تجريبي برقم: ${data[0].id}`, 'success');
+                log('📝 بيانات الطلب:', JSON.stringify(data[0], null, 2));
+                
+            } catch (error) {
+                log(`❌ فشل اختبار الإدراج: ${error.message}`, 'error');
+            }
+        }
+
+        // تشغيل اختبار أولي عند تحميل الصفحة
+        window.addEventListener('load', async () => {
+            log('🚀 بدء اختبار قاعدة البيانات...');
+            await testConnection();
+            await loadBranches();
+        });
+    </script>
+</body>
+</html>

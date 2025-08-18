@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعداد قاعدة البيانات - Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #00aa44;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            display: inline-block;
+        }
+        .button:hover {
+            background: #008833;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .success { color: #00aa44; }
+        .error { color: #cc0000; }
+        .info { color: #0066cc; }
+        h1 { color: #333; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 إعداد قاعدة البيانات Supabase</h1>
+        <p>سيتم إنشاء جميع الجداول والبيانات اللازمة للمشروع مع جميع الفروع الـ 11</p>
+        
+        <button id="setupBtn" class="button">بدء الإعداد</button>
+        <button id="clearBtn" class="button">مسح السجل</button>
+        
+        <div id="log" class="log">جاهز للبدء...</div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://aydtrypogxbqmvbqerce.supabase.co';
+        const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZHRyeXBvZ3hicW12YnFlcmNlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTUwNjU4MywiZXhwIjoyMDcxMDgyNTgzfQ.3wrXHP3HTdfTpTOdxCNLvdVr9gEhudARmJIfycMLAt4';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+        const log = document.getElementById('log');
+        const setupBtn = document.getElementById('setupBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        clearBtn.onclick = () => {
+            log.innerHTML = 'تم مسح السجل...';
+        };
+        
+        setupBtn.onclick = async () => {
+            setupBtn.disabled = true;
+            setupBtn.textContent = 'جاري الإعداد...';
+            
+            try {
+                addLog('🚀 بدء إعداد قاعدة البيانات مع جميع الفروع...', 'info');
+                
+                // إدراج بيانات الفروع مباشرة
+                addLog('📝 إدراج بيانات الفروع الـ 11...', 'info');
+                
+                const branches = [
+                    {
+                        id: 'garb-dammam',
+                        name: 'فرع غرب الدمام',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360356',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9',
+                        email: 'garb@tahfeez-sharqiya.com',
+                        phone: '966138360356',
+                        status: 'active',
+                        region: 'الدمام',
+                        established: '1388'
+                    },
+                    {
+                        id: 'sharq-dammam',
+                        name: 'فرع شرق الدمام',
+                        twitter: 'https://x.com/sharq_dammam',
+                        whatsapp: '966138365678',
+                        instagram: 'https://www.instagram.com/sharq_dammam/',
+                        location: 'https://maps.app.goo.gl/example_sharq',
+                        email: 'sharq@tahfeez-sharqiya.com',
+                        phone: '966138365678',
+                        status: 'active',
+                        region: 'الدمام',
+                        established: '1392'
+                    },
+                    {
+                        id: 'rafeia',
+                        name: 'فرع الرفيعة',
+                        twitter: 'https://x.com/rafeia_tahfeez',
+                        whatsapp: '966138367777',
+                        instagram: 'https://www.instagram.com/rafeia_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_rafeia',
+                        email: 'rafeia@tahfeez-sharqiya.com',
+                        phone: '966138367777',
+                        status: 'active',
+                        region: 'الرفيعة',
+                        established: '1397'
+                    },
+                    {
+                        id: 'baqiq',
+                        name: 'فرع بقيق',
+                        twitter: 'https://x.com/baqiq_tahfeez',
+                        whatsapp: '966138369999',
+                        instagram: 'https://www.instagram.com/baqiq_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_baqiq',
+                        email: 'baqiq@tahfeez-sharqiya.com',
+                        phone: '966138369999',
+                        status: 'active',
+                        region: 'بقيق',
+                        established: '1395'
+                    },
+                    {
+                        id: 'anak',
+                        name: 'فرع عنك',
+                        twitter: 'https://x.com/anak_tahfeez',
+                        whatsapp: '966138361111',
+                        instagram: 'https://www.instagram.com/anak_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_anak',
+                        email: 'anak@tahfeez-sharqiya.com',
+                        phone: '966138361111',
+                        status: 'active',
+                        region: 'عنك',
+                        established: '1400'
+                    },
+                    {
+                        id: 'wadi-almiyah',
+                        name: 'فرع وادي المياه',
+                        twitter: 'https://x.com/wadi_almiyah_tahfeez',
+                        whatsapp: '966138362222',
+                        instagram: 'https://www.instagram.com/wadi_almiyah_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_wadi_almiyah',
+                        email: 'wadi.almiyah@tahfeez-sharqiya.com',
+                        phone: '966138362222',
+                        status: 'active',
+                        region: 'وادي المياه',
+                        established: '1402'
+                    },
+                    {
+                        id: 'khobar',
+                        name: 'فرع الخبر',
+                        twitter: 'https://x.com/khobar_tahfeez',
+                        whatsapp: '966138361234',
+                        instagram: 'https://www.instagram.com/khobar_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_khobar',
+                        email: 'khobar@tahfeez-sharqiya.com',
+                        phone: '966138361234',
+                        status: 'active',
+                        region: 'الخبر',
+                        established: '1390'
+                    },
+                    {
+                        id: 'alsarar',
+                        name: 'فرع الصرار',
+                        twitter: 'https://x.com/alsarar_tahfeez',
+                        whatsapp: '966138363333',
+                        instagram: 'https://www.instagram.com/alsarar_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_alsarar',
+                        email: 'alsarar@tahfeez-sharqiya.com',
+                        phone: '966138363333',
+                        status: 'active',
+                        region: 'الصرار',
+                        established: '1405'
+                    },
+                    {
+                        id: 'ras-tanura',
+                        name: 'فرع رأس تنورة',
+                        twitter: 'https://x.com/ras_tanura_tahfeez',
+                        whatsapp: '966138364444',
+                        instagram: 'https://www.instagram.com/ras_tanura_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_ras_tanura',
+                        email: 'ras.tanura@tahfeez-sharqiya.com',
+                        phone: '966138364444',
+                        status: 'active',
+                        region: 'رأس تنورة',
+                        established: '1408'
+                    },
+                    {
+                        id: 'qaryah',
+                        name: 'فرع قرية',
+                        twitter: 'https://x.com/qaryah_tahfeez',
+                        whatsapp: '966138365555',
+                        instagram: 'https://www.instagram.com/qaryah_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_qaryah',
+                        email: 'qaryah@tahfeez-sharqiya.com',
+                        phone: '966138365555',
+                        status: 'active',
+                        region: 'قرية',
+                        established: '1410'
+                    },
+                    {
+                        id: 'altaeriah',
+                        name: 'فرع التعيرية',
+                        twitter: 'https://x.com/altaeriah_tahfeez',
+                        whatsapp: '966138366666',
+                        instagram: 'https://www.instagram.com/altaeriah_tahfeez/',
+                        location: 'https://maps.app.goo.gl/example_altaeriah',
+                        email: 'altaeriah@tahfeez-sharqiya.com',
+                        phone: '966138366666',
+                        status: 'active',
+                        region: 'التعيرية',
+                        established: '1412'
+                    }
+                ];
+                
+                // محاولة إدراج البيانات مباشرة
+                const { data, error } = await supabase
+                    .from('branches')
+                    .upsert(branches);
+                
+                if (error) {
+                    addLog(`❌ خطأ في إدراج البيانات: ${error.message}`, 'error');
+                    addLog('⚠️ يرجى إنشاء الجداول أولاً من Supabase Dashboard', 'info');
+                    addLog('📋 استخدم المحتوى من setup-database.sql', 'info');
+                } else {
+                    addLog(`✅ تم إدراج ${branches.length} فرع بنجاح`, 'success');
+                    
+                    // التحقق من البيانات
+                    const { data: checkData } = await supabase
+                        .from('branches')
+                        .select('id, name, region')
+                        .order('name');
+                    
+                    addLog(`🔍 التحقق: تم العثور على ${checkData?.length || 0} فرع`, 'success');
+                    
+                    if (checkData) {
+                        checkData.forEach((branch, index) => {
+                            addLog(`   ${index + 1}. ${branch.name} - ${branch.region}`, 'info');
+                        });
+                    }
+                    
+                    addLog('🎉 تم إعداد قاعدة البيانات بنجاح!', 'success');
+                    addLog('✅ يمكنك الآن استخدام المشروع مع Supabase', 'success');
+                }
+                
+            } catch (error) {
+                addLog(`❌ خطأ عام: ${error.message}`, 'error');
+                console.error('Error:', error);
+            } finally {
+                setupBtn.disabled = false;
+                setupBtn.textContent = 'بدء الإعداد';
+            }
+        };
+    </script>
+</body>
+</html>
