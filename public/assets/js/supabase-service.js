@@ -317,8 +317,8 @@ async function createUpdateRequest(branchId, requestData) {
             branch_id: branchId,
             request_data: JSON.stringify(requestData), // تحويل إلى JSON string
             status: 'pending',
-            requested_at: new Date().toISOString(),
-            requested_by: `branch_user_${branchId}` // معرف بسيط للفرع
+            requested_at: new Date().toISOString()
+            // requested_by سيبقى null لأنه اختياري
         };
 
         console.log('📝 بيانات الطلب:', request);
@@ -381,7 +381,7 @@ async function approveUpdateRequest(requestId) {
             .from('update_requests')
             .update({
                 status: 'approved',
-                approved_by: 'admin',
+                approved_by: null, // سيبقى null لأن العمود من نوع UUID
                 approved_at: new Date().toISOString()
             })
             .eq('id', requestId);
@@ -425,7 +425,7 @@ async function rejectUpdateRequest(requestId, reason = '') {
             .from('update_requests')
             .update({
                 status: 'rejected',
-                rejected_by: userInfo.uid,
+                rejected_by: null, // سيبقى null لأن العمود من نوع UUID
                 rejected_at: new Date().toISOString(),
                 rejection_reason: reason
             })
