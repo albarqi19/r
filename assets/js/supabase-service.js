@@ -226,16 +226,24 @@ async function getBranch(branchId) {
 // تحديث بيانات فرع في Supabase
 async function updateBranch(branchId, updateData) {
     try {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        if (!sessionData.session) {
+        // التحقق من جلسة المستخدم في localStorage
+        const userSession = localStorage.getItem('userSession');
+        if (!userSession) {
             throw new Error('يجب تسجيل الدخول أولاً');
+        }
+
+        let userInfo;
+        try {
+            userInfo = JSON.parse(userSession);
+        } catch (e) {
+            throw new Error('جلسة المستخدم غير صالحة');
         }
 
         // إضافة metadata للتحديث
         const updatedData = {
             ...updateData,
             updated_at: new Date().toISOString(),
-            updated_by: sessionData.session.user.id
+            updated_by: userInfo.uid
         };
 
         const { data, error } = await supabaseClient
@@ -257,16 +265,36 @@ async function updateBranch(branchId, updateData) {
 // إنشاء طلب تحديث في Supabase
 async function createUpdateRequest(branchId, requestData) {
     try {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        if (!sessionData.session) {
+        // التحقق من جلسة المستخدم في localStorage بدلاً من Supabase Auth
+        const userSession = localStorage.getItem('userSession');
+        if (!userSession) {
             throw new Error('يجب تسجيل الدخول أولاً');
         }
+
+        let userInfo;
+        try {
+            userInfo = JSON.parse(userSession);
+        } catch (e) {
+            throw new Error('جلسة المستخدم غير صالحة');
+        }
+
+        // التحقق من صحة البيانات
+        if (!userInfo.uid || !userInfo.email) {
+            throw new Error('بيانات المستخدم غير مكتملة');
+        }
+
+        console.log('🔍 معلومات المستخدم للطلب:', {
+            uid: userInfo.uid,
+            email: userInfo.email,
+            role: userInfo.role,
+            branchId: branchId
+        });
 
         const request = {
             branch_id: branchId,
             request_data: requestData,
             status: 'pending',
-            requested_by: sessionData.session.user.id,
+            requested_by: userInfo.uid, // استخدام uid من localStorage
             requested_at: new Date().toISOString()
         };
 
@@ -289,21 +317,25 @@ async function createUpdateRequest(branchId, requestData) {
 // موافقة على طلب التحديث في Supabase
 async function approveUpdateRequest(requestId) {
     try {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        if (!sessionData.session) {
+        // التحقق من جلسة المستخدم في localStorage
+        const userSession = localStorage.getItem('userSession');
+        if (!userSession) {
             throw new Error('يجب تسجيل الدخول أولاً');
         }
 
-        // التحقق من الصلاحيات (المدير فقط)
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('role')
-            .eq('id', sessionData.session.user.id)
-            .single();
-        
-        if (userError || !userData || userData.role !== 'admin') {
-            throw new Error('ليس لديك صلاحية لهذا الإجراء');
+        let userInfo;
+        try {
+            userInfo = JSON.parse(userSession);
+        } catch (e) {
+            throw new Error('جلسة المستخدم غير صالحة');
         }
+
+        // التحقق من الصلاحيات (المدير فقط)
+        if (userInfo.role !== 'admin') {
+            throw new Error('ليس لديك صلاحية لهذا الإجراء - مطلوب دور المدير');
+        }
+
+        console.log('🔍 مدير يوافق على الطلب:', requestId, 'بواسطة:', userInfo.email);
 
         // جلب طلب التحديث
         const { data: requestData, error: requestError } = await supabaseClient
@@ -324,7 +356,7 @@ async function approveUpdateRequest(requestId) {
             .from('update_requests')
             .update({
                 status: 'approved',
-                approved_by: sessionData.session.user.id,
+                approved_by: userInfo.uid,
                 approved_at: new Date().toISOString()
             })
             .eq('id', requestId);
@@ -343,16 +375,29 @@ async function approveUpdateRequest(requestId) {
 // رفض طلب التحديث في Supabase
 async function rejectUpdateRequest(requestId, reason = '') {
     try {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        if (!sessionData.session) {
+        // التحقق من جلسة المستخدم في localStorage
+        const userSession = localStorage.getItem('userSession');
+        if (!userSession) {
             throw new Error('يجب تسجيل الدخول أولاً');
+        }
+
+        let userInfo;
+        try {
+            userInfo = JSON.parse(userSession);
+        } catch (e) {
+            throw new Error('جلسة المستخدم غير صالحة');
+        }
+
+        // التحقق من الصلاحيات (المدير فقط)
+        if (userInfo.role !== 'admin') {
+            throw new Error('ليس لديك صلاحية لهذا الإجراء - مطلوب دور المدير');
         }
 
         const { error } = await supabaseClient
             .from('update_requests')
             .update({
                 status: 'rejected',
-                rejected_by: sessionData.session.user.id,
+                rejected_by: userInfo.uid,
                 rejected_at: new Date().toISOString(),
                 rejection_reason: reason
             })
