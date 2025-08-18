@@ -268,9 +268,16 @@
                     return branchFromUrl;
                 }
                 
-                // العودة للمحفوظ في localStorage أو القيمة الافتراضية
+                // العودة للمحفوظ في localStorage أو null (بدون قيمة افتراضية)
                 const savedBranch = localStorage.getItem('currentBranch');
-                return savedBranch || 'garb-dammam';
+                
+                // إذا لم نجد فرع محدد، لا نعرض شيء
+                if (!savedBranch) {
+                    console.warn('⚠️ لم يتم تحديد فرع - يرجى استخدام ?branch=branch_id في URL');
+                    return null;
+                }
+                
+                return savedBranch;
             }
             
             async init() {
@@ -305,6 +312,20 @@
                 try {
                     console.log('📊 جلب بيانات الفرع:', this.currentBranch);
                     
+                    // إذا لم يكن هناك فرع محدد، لا نعرض شيء
+                    if (!this.currentBranch) {
+                        console.warn('⚠️ لا يوجد فرع محدد');
+                        this.branchData = {
+                            id: null,
+                            name: 'يرجى تحديد فرع',
+                            twitter: '',
+                            whatsapp: '',
+                            instagram: '',
+                            location: ''
+                        };
+                        return;
+                    }
+                    
                     // انتظار Supabase Service
                     if (!window.supabaseService || !window.supabaseService.getBranch) {
                         console.log('⏳ انتظار تحميل Supabase Service...');
@@ -325,6 +346,9 @@
                     if (result.success && result.data) {
                         console.log('✅ تم جلب البيانات من Supabase:', result.data);
                         this.branchData = result.data;
+                        
+                        // فحص الطلبات المعلقة بعد جلب البيانات
+                        await this.checkPendingStatus();
                         return;
                     } else {
                         console.log('⚠️ فشل في جلب بيانات الفرع:', result.error);
@@ -354,6 +378,46 @@
                 }
             }
             
+            async checkPendingStatus() {
+                try {
+                    if (!window.supabaseService || !window.supabaseService.checkPendingRequestsForBranch) {
+                        return;
+                    }
+                    
+                    const pendingInfo = await window.supabaseService.checkPendingRequestsForBranch(this.currentBranch);
+                    
+                    if (pendingInfo.hasPendingRequest) {
+                        console.log('⏳ يوجد طلب معلق للفرع');
+                        this.updateStatusToPending();
+                        // تعطيل زر الحفظ إذا كان هناك طلب معلق
+                        this.disableSaveButton();
+                    } else {
+                        console.log('✅ لا توجد طلبات معلقة');
+                        this.enableSaveButton();
+                    }
+                } catch (error) {
+                    console.error('خطأ في فحص الطلبات المعلقة:', error);
+                }
+            }
+            
+            disableSaveButton() {
+                const saveBtn = document.querySelector('#socialLinksForm button[type="submit"]');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="fas fa-clock"></i> في الانتظار - يوجد طلب معلق';
+                    saveBtn.className = 'w-full bg-yellow-500 text-white py-3 px-4 rounded-lg font-semibold opacity-50 cursor-not-allowed';
+                }
+            }
+            
+            enableSaveButton() {
+                const saveBtn = document.querySelector('#socialLinksForm button[type="submit"]');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ التغييرات';
+                    saveBtn.className = 'w-full bg-primary text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition-all duration-200';
+                }
+            }
+            
             updateUI() {
                 if (!this.branchData) return;
                 
@@ -370,6 +434,15 @@
             async saveSocialLinks() {
                 const submitBtn = document.querySelector('#socialLinksForm button[type="submit"]');
                 const spinner = document.getElementById('saveSpinner');
+                
+                // التحقق من وجود طلبات معلقة أولاً
+                if (window.supabaseService && window.supabaseService.checkPendingRequestsForBranch) {
+                    const pendingInfo = await window.supabaseService.checkPendingRequestsForBranch(this.currentBranch);
+                    if (pendingInfo.hasPendingRequest) {
+                        this.showNotification('لا يمكن إرسال طلب جديد - يوجد طلب معلق بالفعل في انتظار الموافقة', 'error');
+                        return;
+                    }
+                }
                 
                 // إظهار حالة التحميل
                 submitBtn.disabled = true;
@@ -404,6 +477,9 @@
                         
                         // تحديث حالة الصفحة
                         this.updateStatusToPending();
+                        
+                        // تعطيل زر الحفظ بعد إرسال الطلب
+                        this.disableSaveButton();
                         
                         // تسجيل الحدث إذا كانت الدالة متوفرة
                         if (window.supabaseService.logEvent) {
@@ -490,6 +566,8 @@
                 console.log('🔄 إعادة تحميل البيانات بعد توفر Supabase...');
                 await window.dashboardManager.loadBranchData();
                 window.dashboardManager.updateUI();
+                // فحص الحالة مرة أخرى بعد إعادة التحميل
+                await window.dashboardManager.checkPendingStatus();
             }
             
             console.log('✅ تم تحميل لوحة تحكم الفرع');

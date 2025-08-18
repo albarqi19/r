@@ -475,6 +475,42 @@ async function getPendingRequests() {
     }
 }
 
+// فحص الطلبات المعلقة لفرع معين
+async function checkPendingRequestsForBranch(branchId) {
+    try {
+        console.log('🔍 فحص الطلبات المعلقة للفرع:', branchId);
+        
+        if (!supabaseClient) {
+            throw new Error('Supabase client غير متاح');
+        }
+
+        const { data, error } = await supabaseClient
+            .from('update_requests')
+            .select('*')
+            .eq('branch_id', branchId)
+            .eq('status', 'pending')
+            .order('requested_at', { ascending: false })
+            .limit(1);
+
+        if (error) {
+            console.error('❌ خطأ في فحص الطلبات:', error);
+            throw error;
+        }
+        
+        const hasPendingRequest = data && data.length > 0;
+        console.log(`📊 الفرع ${branchId} - طلبات معلقة:`, hasPendingRequest ? 'نعم' : 'لا');
+        
+        return {
+            hasPendingRequest: hasPendingRequest,
+            latestRequest: hasPendingRequest ? data[0] : null
+        };
+        
+    } catch (error) {
+        console.error('❌ خطأ في فحص الطلبات المعلقة للفرع:', error);
+        return { hasPendingRequest: false, latestRequest: null };
+    }
+}
+
 // ===== وظائف مساعدة =====
 
 // الحصول على IP المستخدم
@@ -722,6 +758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.supabaseService.approveUpdateRequest = approveUpdateRequest;
             window.supabaseService.rejectUpdateRequest = rejectUpdateRequest;
             window.supabaseService.getPendingRequests = getPendingRequests;
+            window.supabaseService.checkPendingRequestsForBranch = checkPendingRequestsForBranch;
             window.supabaseService.setupInitialData = setupInitialData;
             window.supabaseService.signInUser = signInUser;
             window.supabaseService.signOutUser = signOutUser;
