@@ -182,12 +182,8 @@
                         <p class="text-gray-500 text-sm mt-1">مراجعة وموافقة تغييرات الفروع</p>
                     </div>
                     
-                    <div class="p-6" id="requestsList">
-                        <!-- Loading indicator -->
-                        <div id="requestsLoading" class="text-center py-8">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                            <p class="text-gray-500">جاري تحميل الطلبات...</p>
-                        </div>
+                    <div class="p-6" id="requests-container">
+                        <!-- سيتم تحميل الطلبات هنا من قاعدة البيانات -->
                     </div>
                 </div>
             </div>
@@ -306,480 +302,253 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../assets/js/supabase-service.js"></script>
     <script src="../assets/js/app.js"></script>
     <script>
-        // Admin Dashboard Manager
-        class AdminDashboard {
-            constructor() {
-                this.currentUser = null;
-                this.branches = {};
-                this.updateRequests = {};
-                this.init();
-            }
-
-            async init() {
-                // التحقق من صلاحية المستخدم
-                this.currentUser = this.getCurrentUser();
-                if (!this.currentUser || this.currentUser.role !== 'admin') {
-                    window.location.href = '../auth/login.html';
+        // Admin Dashboard Functions
+        let currentRequestId = null;
+        let currentBranchId = null;
+        let pendingRequests = [];
+        
+        // Load pending requests from database
+        async function loadPendingRequests() {
+            try {
+                if (!window.supabaseService || !window.supabaseService.getPendingRequests) {
+                    console.log('⏳ انتظار تحميل Supabase Service...');
                     return;
                 }
-
-                // انتظار تحميل Firebase
-                await this.waitForFirebase();
                 
-                // تحميل البيانات
-                await this.loadDashboardData();
+                console.log('📋 جلب الطلبات المعلقة...');
+                const requests = await window.supabaseService.getPendingRequests();
                 
-                // إعداد المستمعين
-                this.setupEventListeners();
-                
-                console.log('✅ لوحة المدير جاهزة');
-            }
-
-            getCurrentUser() {
-                const userSession = localStorage.getItem('userSession');
-                return userSession ? JSON.parse(userSession) : null;
-            }
-
-            async waitForFirebase() {
-                return new Promise((resolve) => {
-                    const checkFirebase = () => {
-                        if (window.supabaseService && window.supabaseService.getAllBranches) {
-                            console.log('✅ Firebase Service جاهز في لوحة المدير');
-                            resolve();
-                        } else {
-                            console.log('⏳ انتظار Firebase Service...');
-                            setTimeout(checkFirebase, 100);
-                        }
-                    };
-                    checkFirebase();
-                });
-            }
-
-            async loadDashboardData() {
-                try {
-                    console.log('📥 المدير: تحميل بيانات الفروع والطلبات...');
-                    
-                    // جلب بيانات الفروع
-                    if (window.supabaseService && typeof window.supabaseService.getAllBranches === 'function') {
-                        console.log('🔥 جلب بيانات الفروع من supabaseService...');
-                        const branchesResult = await window.supabaseService.getAllBranches();
-                        
-                        if (branchesResult.success) {
-                            this.branches = branchesResult.data;
-                            console.log('✅ تم جلب بيانات الفروع:', this.branches);
-                        } else {
-                            console.warn('⚠️ فشل في جلب الفروع:', branchesResult.error);
-                            this.branches = this.getDefaultBranchesData();
-                        }
-                    } else {
-                        console.log('🔄 استخدام البيانات الافتراضية للفروع');
-                        this.branches = this.getDefaultBranchesData();
-                    }
-
-                    // جلب طلبات التحديث
-                    if (window.supabaseService && typeof window.supabaseService.getPendingRequests === 'function') {
-                        console.log('🔥 جلب الطلبات المعلقة...');
-                        const requestsResult = await window.supabaseService.getPendingRequests();
-                        
-                        if (requestsResult.success) {
-                            this.updateRequests = requestsResult.data;
-                            console.log('✅ تم جلب الطلبات المعلقة:', this.updateRequests);
-                        } else {
-                            console.warn('⚠️ فشل في جلب الطلبات:', requestsResult.error);
-                            this.updateRequests = {};
-                        }
-                    } else {
-                        console.log('🔄 لا توجد طلبات - supabaseService غير متوفر');
-                        this.updateRequests = {};
-                    }
-
-                    // تحديث الإحصائيات
-                    this.updateStatistics();
-
-                    // عرض الطلبات
-                    this.displayUpdateRequests();
-
-                } catch (error) {
-                    console.error('خطأ في تحميل البيانات:', error);
-                    this.showNotification('خطأ في تحميل البيانات', 'error');
+                if (requests && requests.length > 0) {
+                    pendingRequests = requests;
+                    displayRequests(requests);
+                    updateStats();
+                } else {
+                    displayNoRequests();
                 }
+                
+            } catch (error) {
+                console.error('❌ خطأ في جلب الطلبات:', error);
+                displayNoRequests();
+            }
+        }
+        
+        // Display requests
+        function displayRequests(requests) {
+            const container = document.querySelector('#requests-container') || document.querySelector('.space-y-4');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            requests.forEach(request => {
+                const requestElement = createRequestElement(request);
+                container.appendChild(requestElement);
+            });
+        }
+        
+        // Create request element
+        function createRequestElement(request) {
+            const div = document.createElement('div');
+            div.className = 'pending-item p-6 rounded-lg shadow-sm';
+            
+            const branchName = getBranchName(request.branch_id);
+            const requestData = JSON.parse(request.request_data);
+            const requestDate = new Date(request.created_at).toLocaleDateString('ar-SA');
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">${branchName}</h3>
+                        <p class="text-gray-600 mb-2">تم الإرسال في: ${requestDate}</p>
+                    </div>
+                    <span class="status-pending bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">في الانتظار</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <h4 class="font-medium text-gray-800 mb-2">البيانات المطلوب تحديثها:</h4>
+                    <p class="text-sm text-gray-600">${getRequestDescription(requestData)}</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="action-btn approve-btn" onclick="approveRequest('${request.id}')">
+                        <i class="fas fa-check"></i>
+                        موافقة
+                    </button>
+                    <button class="action-btn reject-btn" onclick="rejectRequest('${request.id}')">
+                        <i class="fas fa-times"></i>
+                        رفض
+                    </button>
+                    <button class="action-btn view-btn" onclick="viewRequest('${request.branch_id}')">
+                        <i class="fas fa-eye"></i>
+                        عرض الفرع
+                    </button>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // Get branch name
+        function getBranchName(branchId) {
+            const branchNames = {
+                'garb-dammam': 'مسجد غرب الدمام',
+                'khobar': 'مسجد الخبر',
+                'sharq-dammam': 'مسجد شرق الدمام',
+                'rafeia': 'مسجد الرافعية',
+                'baqiq': 'مسجد البقيق'
+            };
+            return branchNames[branchId] || branchId;
+        }
+        
+        // Get request description
+        function getRequestDescription(requestData) {
+            let description = '';
+            if (requestData.totalStudents !== undefined) {
+                description += `عدد الطلاب الحاليين: ${requestData.totalStudents}، `;
+            }
+            if (requestData.totalMemorizers !== undefined) {
+                description += `عدد الحافظين: ${requestData.totalMemorizers}، `;
+            }
+            if (requestData.newRegistrations !== undefined) {
+                description += `التسجيلات الجديدة: ${requestData.newRegistrations}، `;
+            }
+            if (requestData.lastUpdate !== undefined) {
+                description += `آخر تحديث: ${requestData.lastUpdate}`;
+            }
+            return description || 'تحديث بيانات الفرع';
+        }
+        
+        // Display no requests message
+        function displayNoRequests() {
+            const container = document.querySelector('#requests-container') || document.querySelector('.space-y-4');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">لا توجد طلبات معلقة حالياً</p>
+                </div>
+            `;
+        }
+        
+        // Approve request
+        async function approveRequest(requestId) {
+            try {
+                if (!window.supabaseService || !window.supabaseService.approveUpdateRequest) {
+                    throw new Error('خدمة Supabase غير متاحة');
+                }
+                
+                console.log('✅ الموافقة على الطلب:', requestId);
+                const result = await window.supabaseService.approveUpdateRequest(requestId);
+                
+                if (result.success) {
+                    showNotification('تم اعتماد الطلب بنجاح', 'success');
+                    // إعادة تحميل الطلبات
+                    await loadPendingRequests();
+                } else {
+                    throw new Error(result.error || 'فشل في الموافقة على الطلب');
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في الموافقة على الطلب:', error);
+                showNotification('حدث خطأ أثناء الموافقة على الطلب: ' + error.message, 'error');
+            }
+        }
+        
+        // Reject request  
+        async function rejectRequest(requestId) {
+            if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) {
+                return;
             }
             
-            getDefaultBranchesData() {
-                return {
-                    'garb-dammam': {
-                        id: 'garb-dammam',
-                        name: 'فرع غرب الدمام'
-                    },
-                    'sharq-dammam': {
-                        id: 'sharq-dammam', 
-                        name: 'فرع شرق الدمام'
-                    },
-                    'khobar': {
-                        id: 'khobar',
-                        name: 'فرع الخبر'
-                    },
-                    'baqiq': {
-                        id: 'baqiq',
-                        name: 'فرع بقيق'
-                    },
-                    'rafeia': {
-                        id: 'rafeia',
-                        name: 'فرع الرافعية'
-                    }
-                };
-            }
-
-            updateStatistics() {
-                const totalBranches = Object.keys(this.branches).length;
-                const activeBranches = Object.values(this.branches).filter(branch => 
-                    branch.status === 'active'
-                ).length;
+            try {
+                if (!window.supabaseService || !window.supabaseService.rejectUpdateRequest) {
+                    throw new Error('خدمة Supabase غير متاحة');
+                }
                 
-                const pendingRequests = Object.values(this.updateRequests).filter(request => 
-                    request.status === 'pending'
-                ).length;
-
-                const totalBranchesEl = document.getElementById('totalBranches');
-                const activeBranchesEl = document.getElementById('activeBranches');
-                const pendingRequestsEl = document.getElementById('pendingRequests');
-                const totalUsersEl = document.getElementById('totalUsers');
-
-                if (totalBranchesEl) totalBranchesEl.textContent = totalBranches;
-                if (activeBranchesEl) activeBranchesEl.textContent = activeBranches;
-                if (pendingRequestsEl) pendingRequestsEl.textContent = pendingRequests;
-                if (totalUsersEl) totalUsersEl.textContent = '---'; // سنضيف هذا لاحقاً
+                console.log('❌ رفض الطلب:', requestId);
+                const result = await window.supabaseService.rejectUpdateRequest(requestId, 'تم الرفض من قبل المدير');
+                
+                if (result.success) {
+                    showNotification('تم رفض الطلب', 'success');
+                    // إعادة تحميل الطلبات
+                    await loadPendingRequests();
+                } else {
+                    throw new Error(result.error || 'فشل في رفض الطلب');
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في رفض الطلب:', error);
+                showNotification('حدث خطأ أثناء رفض الطلب: ' + error.message, 'error');
             }
-
-            displayUpdateRequests() {
-                const requestsContainer = document.getElementById('requestsList');
-                if (!requestsContainer) {
-                    console.error('عنصر قائمة الطلبات غير موجود');
+        }
+        
+        // View request details
+        function viewRequest(branchId) {
+            window.open(`../branches/${branchId}/`, '_blank');
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const pendingCount = pendingRequests.length;
+            const pendingElement = document.getElementById('pendingRequests');
+            if (pendingElement) {
+                pendingElement.textContent = pendingCount;
+            }
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            if (window.utils) {
+                if (type === 'success') {
+                    window.utils.showSuccess(message);
+                } else {
+                    window.utils.showError(message);
+                }
+            } else {
+                alert(message);
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 تم تحميل صفحة المدير');
+            
+            // انتظار تحميل Supabase Service
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            const waitForSupabase = async () => {
+                if (window.supabaseService && window.supabaseService.getPendingRequests) {
+                    console.log('✅ تم العثور على Supabase Service');
+                    await loadPendingRequests();
                     return;
                 }
-
-                // مسح المحتوى الحالي
-                requestsContainer.innerHTML = '';
-
-                const requests = Object.entries(this.updateRequests)
-                    .filter(([id, request]) => request.status === 'pending')
-                    .sort(([,a], [,b]) => b.timestamp - a.timestamp);
-
-                if (requests.length === 0) {
-                    requestsContainer.innerHTML = `
-                        <div class="text-center py-8 text-gray-500">
-                            <i class="fas fa-clipboard-list text-4xl mb-4"></i>
-                            <p class="text-lg font-semibold">لا توجد طلبات معلقة</p>
-                            <p class="text-sm">جميع الطلبات تم معالجتها</p>
-                        </div>
-                    `;
-                    return;
+                
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`⏳ محاولة ${retryCount}/${maxRetries} - انتظار Supabase Service...`);
+                    setTimeout(waitForSupabase, 500);
+                } else {
+                    console.error('❌ فشل في تحميل Supabase Service');
+                    displayNoRequests();
                 }
-
-                requests.forEach(([requestId, request]) => {
-                    const requestElement = this.createRequestElement(requestId, request);
-                    requestsContainer.appendChild(requestElement);
-                });
-            }
-
-            createRequestElement(requestId, request) {
-                const div = document.createElement('div');
-                div.className = 'pending-item p-4 rounded-xl mb-4';
-                div.setAttribute('data-request-id', requestId);
-
-                console.log('🔍 createRequestElement - request data:', request);
-
-                const branchName = this.branches[request.branchId]?.name || 'فرع غير محدد';
-                const timeAgo = this.getTimeAgo(request.requestedAt || request.timestamp);
-                
-                // تحويل التغييرات إلى نص مقروء - استخدام requestData بدلاً من changes
-                const changesData = request.requestData || request.changes || {};
-                console.log('🔍 changesData:', changesData);
-                const changesText = this.formatChanges(changesData);
-
-                div.innerHTML = `
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt text-white"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800">${branchName}</h3>
-                                <p class="text-gray-600 text-sm">${request.description || 'طلب تحديث بيانات الفرع'}</p>
-                            </div>
-                        </div>
-                        <span class="status-pending bg-orange-500 text-white text-xs px-2 py-1 rounded-full">معلق</span>
-                    </div>
-                    
-                    <div class="bg-white/50 p-3 rounded-lg mb-3 text-sm">
-                        ${changesText}
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500 text-xs">
-                            <i class="fas fa-calendar ml-1"></i>
-                            ${timeAgo}
-                        </span>
-                        <div class="flex gap-2">
-                            <button class="action-btn view-btn" onclick="adminDashboard.viewBranch('${request.branchId}')">
-                                <i class="fas fa-eye ml-1"></i>
-                                عرض الفرع
-                            </button>
-                            <button class="action-btn reject-btn" onclick="adminDashboard.rejectRequest('${requestId}')">
-                                <i class="fas fa-times ml-1"></i>
-                                رفض
-                            </button>
-                            <button class="action-btn approve-btn" onclick="adminDashboard.approveRequest('${requestId}')">
-                                <i class="fas fa-check ml-1"></i>
-                                موافقة
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                return div;
-            }
-
-            formatChanges(changes) {
-                const changesList = [];
-                
-                // التحقق من وجود البيانات
-                if (!changes || typeof changes !== 'object') {
-                    console.warn('⚠️ formatChanges: البيانات غير صالحة:', changes);
-                    return '<div class="text-gray-500">لا توجد تغييرات</div>';
-                }
-                
-                try {
-                    for (const [field, newValue] of Object.entries(changes)) {
-                        const fieldName = this.getFieldDisplayName(field);
-                        changesList.push(`<div><strong>${fieldName}:</strong> ${newValue}</div>`);
-                    }
-                } catch (error) {
-                    console.error('❌ خطأ في formatChanges:', error, 'البيانات:', changes);
-                    return '<div class="text-red-500">خطأ في عرض التغييرات</div>';
-                }
-                
-                return changesList.length > 0 ? changesList.join('') : '<div class="text-gray-500">لا توجد تغييرات</div>';
-            }
-
-            getFieldDisplayName(field) {
-                const fieldNames = {
-                    'name': 'اسم الفرع',
-                    'twitter': 'تويتر',
-                    'whatsapp': 'واتساب',
-                    'instagram': 'إنستغرام',
-                    'location': 'الموقع',
-                    'email': 'البريد الإلكتروني',
-                    'phone': 'الهاتف',
-                    'store': 'المتجر'
-                };
-                
-                return fieldNames[field] || field;
-            }
-
-            getTimeAgo(timestamp) {
-                const now = Date.now();
-                const diff = now - timestamp;
-                const minutes = Math.floor(diff / 60000);
-                const hours = Math.floor(diff / 3600000);
-                const days = Math.floor(diff / 86400000);
-
-                if (days > 0) return `منذ ${days} ${days === 1 ? 'يوم' : 'أيام'}`;
-                if (hours > 0) return `منذ ${hours} ${hours === 1 ? 'ساعة' : 'ساعات'}`;
-                if (minutes > 0) return `منذ ${minutes} ${minutes === 1 ? 'دقيقة' : 'دقائق'}`;
-                return 'الآن';
-            }
-
-            async approveRequest(requestId) {
-                this.currentRequestId = requestId;
-                document.getElementById('approvalModal').classList.remove('hidden');
-            }
-
-            async confirmApproval() {
-                if (!this.currentRequestId) return;
-
-                try {
-                    const request = this.updateRequests[this.currentRequestId];
-                    if (!request) {
-                        throw new Error('الطلب غير موجود');
-                    }
-
-                    console.log('🚀 المدير: بدء عملية الموافقة...', request);
-
-                    // التحقق من وجود supabaseService
-                    if (!window.supabaseService) {
-                        throw new Error('Supabase Service غير متوفر');
-                    }
-
-                    // التحقق من وجود دالة الموافقة
-                    if (typeof window.supabaseService.approveUpdateRequest !== 'function') {
-                        throw new Error('دالة الموافقة غير متوفرة في Supabase Service');
-                    }
-
-                    console.log('🔥 استخدام supabaseService للموافقة...');
-                    const result = await window.supabaseService.approveUpdateRequest(this.currentRequestId);
-                    
-                    if (!result || !result.success) {
-                        throw new Error(result?.error || 'فشل في الموافقة على الطلب');
-                    }
-
-                    console.log('✅ تمت الموافقة على الطلب بنجاح');
-                    this.showNotification('تم اعتماد الطلب بنجاح', 'success');
-                    
-                    // إعادة تحميل البيانات
-                    await this.loadDashboardData();
-
-                } catch (error) {
-                    console.error('خطأ في الموافقة:', error);
-                    this.showNotification(`خطأ في اعتماد الطلب: ${error.message}`, 'error');
-                } finally {
-                    document.getElementById('approvalModal').classList.add('hidden');
-                    this.currentRequestId = null;
-                }
-            }
-
-            async rejectRequest(requestId) {
-                if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) return;
-
-                try {
-                    // التحقق من وجود supabaseService
-                    if (!window.supabaseService) {
-                        throw new Error('Supabase Service غير متوفر');
-                    }
-
-                    // التحقق من وجود دالة الرفض
-                    if (typeof window.supabaseService.rejectUpdateRequest !== 'function') {
-                        throw new Error('دالة الرفض غير متوفرة في Supabase Service');
-                    }
-
-                    console.log('🚀 رفض الطلب:', requestId);
-                    const result = await window.supabaseService.rejectUpdateRequest(requestId, 'تم الرفض من المدير');
-                    
-                    if (!result || !result.success) {
-                        throw new Error(result?.error || 'فشل في رفض الطلب');
-                    }
-
-                    this.showNotification('تم رفض الطلب', 'info');
-                    
-                    // إعادة تحميل البيانات
-                    await this.loadDashboardData();
-
-                } catch (error) {
-                    console.error('خطأ في رفض الطلب:', error);
-                    this.showNotification('خطأ في رفض الطلب: ' + error.message, 'error');
-                }
-            }
-
-            viewBranch(branchId) {
-                // فتح صفحة الفرع في تبويب جديد
-                window.open(`../branch-template.html?branch=${branchId}`, '_blank');
-            }
-
-            showNotification(message, type = 'info') {
-                // إنشاء عنصر الإشعار
-                const notification = document.createElement('div');
-                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all transform translate-x-full`;
-                
-                const colors = {
-                    success: 'bg-green-500 text-white',
-                    error: 'bg-red-500 text-white',
-                    info: 'bg-blue-500 text-white',
-                    warning: 'bg-yellow-500 text-white'
-                };
-                
-                const icons = {
-                    success: 'fas fa-check-circle',
-                    error: 'fas fa-exclamation-circle',
-                    info: 'fas fa-info-circle',
-                    warning: 'fas fa-exclamation-triangle'
-                };
-
-                notification.className += ` ${colors[type] || colors.info}`;
-                notification.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <i class="${icons[type] || icons.info}"></i>
-                        <span>${message}</span>
-                    </div>
-                `;
-
-                document.body.appendChild(notification);
-
-                // إظهار الإشعار
-                setTimeout(() => {
-                    notification.classList.remove('translate-x-full');
-                }, 100);
-
-                // إخفاء الإشعار بعد 4 ثواني
-                setTimeout(() => {
-                    notification.classList.add('translate-x-full');
-                    setTimeout(() => {
-                        document.body.removeChild(notification);
-                    }, 300);
-                }, 4000);
-            }
-
-            setupEventListeners() {
-                // أحداث النافذة المنبثقة
-                document.getElementById('confirmApprove').addEventListener('click', () => {
-                    this.confirmApproval();
-                });
-
-                document.getElementById('cancelApprove').addEventListener('click', () => {
-                    document.getElementById('approvalModal').classList.add('hidden');
-                    this.currentRequestId = null;
-                });
-
-                // تسجيل الخروج
-                document.getElementById('logoutBtn').addEventListener('click', () => {
+            };
+            
+            await waitForSupabase();
+            
+            // Logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
                     if (confirm('هل تريد تسجيل الخروج؟')) {
-                        localStorage.clear();
+                        if (window.supabaseService && window.supabaseService.signOutUser) {
+                            await window.supabaseService.signOutUser();
+                        }
                         window.location.href = '../auth/login.html';
                     }
                 });
-
-                // إغلاق النافذة المنبثقة عند النقر خارجها
-                document.getElementById('approvalModal').addEventListener('click', (e) => {
-                    if (e.target.id === 'approvalModal') {
-                        document.getElementById('approvalModal').classList.add('hidden');
-                        this.currentRequestId = null;
-                    }
-                });
-
-                // إعداد مستمع للتحديثات المباشرة
-                this.setupRealtimeUpdates();
-
-                // زر التحديث
-                document.getElementById('refreshBtn')?.addEventListener('click', () => {
-                    this.loadDashboardData();
-                });
             }
-
-            setupRealtimeUpdates() {
-                // مستمع للطلبات الجديدة
-                firebase.database().ref('updateRequests').on('child_added', (snapshot) => {
-                    const request = snapshot.val();
-                    if (request.status === 'pending') {
-                        // إعادة تحميل البيانات عند وصول طلب جديد
-                        this.loadDashboardData();
-                        this.showNotification(`طلب جديد من ${this.branches[request.branchId]?.name || 'فرع غير محدد'}`, 'info');
-                    }
-                });
-
-                // مستمع لتحديث الطلبات
-                firebase.database().ref('updateRequests').on('child_changed', () => {
-                    this.loadDashboardData();
-                });
-            }
-        }
-
-        // تهيئة لوحة المدير
-        let adminDashboard;
-        document.addEventListener('DOMContentLoaded', () => {
-            adminDashboard = new AdminDashboard();
         });
     </script>
 </body>

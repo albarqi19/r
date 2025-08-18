@@ -182,120 +182,8 @@
                         <p class="text-gray-500 text-sm mt-1">مراجعة وموافقة تغييرات الفروع</p>
                     </div>
                     
-                    <div class="p-6" id="pendingList">
-                        
-                        <!-- Pending Request 1 -->
-                        <div class="pending-item p-4 rounded-xl mb-4">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-map-marker-alt text-white"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800">فرع غرب الدمام</h3>
-                                        <p class="text-gray-600 text-sm">طلب تحديث روابط التواصل</p>
-                                    </div>
-                                </div>
-                                <span class="status-pending text-white text-xs px-2 py-1 rounded-full">معلق</span>
-                            </div>
-                            
-                            <div class="bg-white/50 p-3 rounded-lg mb-3 text-sm">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <div><strong>تويتر:</strong> تغيير إلى @NewAccount</div>
-                                    <div><strong>واتساب:</strong> تحديث الرقم</div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-500 text-xs">
-                                    <i class="fas fa-calendar ml-1"></i>
-                                    منذ 3 ساعات
-                                </span>
-                                <div class="flex gap-2">
-                                    <button class="action-btn view-btn" onclick="viewRequest('garb-dammam', 1)">
-                                        <i class="fas fa-eye ml-1"></i>
-                                        عرض
-                                    </button>
-                                    <button class="action-btn reject-btn" onclick="rejectRequest('garb-dammam', 1)">
-                                        <i class="fas fa-times ml-1"></i>
-                                        رفض
-                                    </button>
-                                    <button class="action-btn approve-btn" onclick="approveRequest('garb-dammam', 1)">
-                                        <i class="fas fa-check ml-1"></i>
-                                        موافقة
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Pending Request 2 -->
-                        <div class="pending-item p-4 rounded-xl mb-4">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-map-marker-alt text-white"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800">فرع الخبر</h3>
-                                        <p class="text-gray-600 text-sm">طلب إضافة رابط إنستغرام جديد</p>
-                                    </div>
-                                </div>
-                                <span class="status-pending text-white text-xs px-2 py-1 rounded-full">معلق</span>
-                            </div>
-                            
-                            <div class="bg-white/50 p-3 rounded-lg mb-3 text-sm">
-                                <div><strong>إنستغرام:</strong> إضافة @KhobarTahfeez</div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-500 text-xs">
-                                    <i class="fas fa-calendar ml-1"></i>
-                                    منذ 5 ساعات
-                                </span>
-                                <div class="flex gap-2">
-                                    <button class="action-btn view-btn" onclick="viewRequest('khobar', 2)">
-                                        <i class="fas fa-eye ml-1"></i>
-                                        عرض
-                                    </button>
-                                    <button class="action-btn reject-btn" onclick="rejectRequest('khobar', 2)">
-                                        <i class="fas fa-times ml-1"></i>
-                                        رفض
-                                    </button>
-                                    <button class="action-btn approve-btn" onclick="approveRequest('khobar', 2)">
-                                        <i class="fas fa-check ml-1"></i>
-                                        موافقة
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Approved Request -->
-                        <div class="approved-item p-4 rounded-xl mb-4">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-check text-white"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800">فرع الرفيعة</h3>
-                                        <p class="text-gray-600 text-sm">تم تحديث رقم الواتساب</p>
-                                    </div>
-                                </div>
-                                <span class="status-approved text-white text-xs px-2 py-1 rounded-full">معتمد</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-500 text-xs">
-                                    <i class="fas fa-calendar ml-1"></i>
-                                    منذ يوم واحد
-                                </span>
-                                <span class="text-green-600 text-sm font-semibold">
-                                    <i class="fas fa-check-circle ml-1"></i>
-                                    تم التفعيل
-                                </span>
-                            </div>
-                        </div>
-                        
+                    <div class="p-6" id="requests-container">
+                        <!-- سيتم تحميل الطلبات هنا من قاعدة البيانات -->
                     </div>
                 </div>
             </div>
@@ -420,66 +308,193 @@
         // Admin Dashboard Functions
         let currentRequestId = null;
         let currentBranchId = null;
+        let pendingRequests = [];
+        
+        // Load pending requests from database
+        async function loadPendingRequests() {
+            try {
+                if (!window.supabaseService || !window.supabaseService.getPendingRequests) {
+                    console.log('⏳ انتظار تحميل Supabase Service...');
+                    return;
+                }
+                
+                console.log('📋 جلب الطلبات المعلقة...');
+                const requests = await window.supabaseService.getPendingRequests();
+                
+                if (requests && requests.length > 0) {
+                    pendingRequests = requests;
+                    displayRequests(requests);
+                    updateStats();
+                } else {
+                    displayNoRequests();
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في جلب الطلبات:', error);
+                displayNoRequests();
+            }
+        }
+        
+        // Display requests
+        function displayRequests(requests) {
+            const container = document.querySelector('#requests-container') || document.querySelector('.space-y-4');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            requests.forEach(request => {
+                const requestElement = createRequestElement(request);
+                container.appendChild(requestElement);
+            });
+        }
+        
+        // Create request element
+        function createRequestElement(request) {
+            const div = document.createElement('div');
+            div.className = 'pending-item p-6 rounded-lg shadow-sm';
+            
+            const branchName = getBranchName(request.branch_id);
+            const requestData = JSON.parse(request.request_data);
+            const requestDate = new Date(request.created_at).toLocaleDateString('ar-SA');
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">${branchName}</h3>
+                        <p class="text-gray-600 mb-2">تم الإرسال في: ${requestDate}</p>
+                    </div>
+                    <span class="status-pending bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">في الانتظار</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <h4 class="font-medium text-gray-800 mb-2">البيانات المطلوب تحديثها:</h4>
+                    <p class="text-sm text-gray-600">${getRequestDescription(requestData)}</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="action-btn approve-btn" onclick="approveRequest('${request.id}')">
+                        <i class="fas fa-check"></i>
+                        موافقة
+                    </button>
+                    <button class="action-btn reject-btn" onclick="rejectRequest('${request.id}')">
+                        <i class="fas fa-times"></i>
+                        رفض
+                    </button>
+                    <button class="action-btn view-btn" onclick="viewRequest('${request.branch_id}')">
+                        <i class="fas fa-eye"></i>
+                        عرض الفرع
+                    </button>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // Get branch name
+        function getBranchName(branchId) {
+            const branchNames = {
+                'garb-dammam': 'مسجد غرب الدمام',
+                'khobar': 'مسجد الخبر',
+                'sharq-dammam': 'مسجد شرق الدمام',
+                'rafeia': 'مسجد الرافعية',
+                'baqiq': 'مسجد البقيق'
+            };
+            return branchNames[branchId] || branchId;
+        }
+        
+        // Get request description
+        function getRequestDescription(requestData) {
+            let description = '';
+            if (requestData.totalStudents !== undefined) {
+                description += `عدد الطلاب الحاليين: ${requestData.totalStudents}، `;
+            }
+            if (requestData.totalMemorizers !== undefined) {
+                description += `عدد الحافظين: ${requestData.totalMemorizers}، `;
+            }
+            if (requestData.newRegistrations !== undefined) {
+                description += `التسجيلات الجديدة: ${requestData.newRegistrations}، `;
+            }
+            if (requestData.lastUpdate !== undefined) {
+                description += `آخر تحديث: ${requestData.lastUpdate}`;
+            }
+            return description || 'تحديث بيانات الفرع';
+        }
+        
+        // Display no requests message
+        function displayNoRequests() {
+            const container = document.querySelector('#requests-container') || document.querySelector('.space-y-4');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">لا توجد طلبات معلقة حالياً</p>
+                </div>
+            `;
+        }
         
         // Approve request
-        function approveRequest(branchId, requestId) {
-            currentBranchId = branchId;
-            currentRequestId = requestId;
-            document.getElementById('approvalModal').classList.remove('hidden');
+        async function approveRequest(requestId) {
+            try {
+                if (!window.supabaseService || !window.supabaseService.approveUpdateRequest) {
+                    throw new Error('خدمة Supabase غير متاحة');
+                }
+                
+                console.log('✅ الموافقة على الطلب:', requestId);
+                const result = await window.supabaseService.approveUpdateRequest(requestId);
+                
+                if (result.success) {
+                    showNotification('تم اعتماد الطلب بنجاح', 'success');
+                    // إعادة تحميل الطلبات
+                    await loadPendingRequests();
+                } else {
+                    throw new Error(result.error || 'فشل في الموافقة على الطلب');
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في الموافقة على الطلب:', error);
+                showNotification('حدث خطأ أثناء الموافقة على الطلب: ' + error.message, 'error');
+            }
         }
         
         // Reject request  
-        function rejectRequest(branchId, requestId) {
-            if (confirm('هل أنت متأكد من رفض هذا الطلب؟')) {
-                processRequest(branchId, requestId, 'rejected');
+        async function rejectRequest(requestId) {
+            if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) {
+                return;
+            }
+            
+            try {
+                if (!window.supabaseService || !window.supabaseService.rejectUpdateRequest) {
+                    throw new Error('خدمة Supabase غير متاحة');
+                }
+                
+                console.log('❌ رفض الطلب:', requestId);
+                const result = await window.supabaseService.rejectUpdateRequest(requestId, 'تم الرفض من قبل المدير');
+                
+                if (result.success) {
+                    showNotification('تم رفض الطلب', 'success');
+                    // إعادة تحميل الطلبات
+                    await loadPendingRequests();
+                } else {
+                    throw new Error(result.error || 'فشل في رفض الطلب');
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في رفض الطلب:', error);
+                showNotification('حدث خطأ أثناء رفض الطلب: ' + error.message, 'error');
             }
         }
         
         // View request details
-        function viewRequest(branchId, requestId) {
+        function viewRequest(branchId) {
             window.open(`../branches/${branchId}/`, '_blank');
-        }
-        
-        // Process request (approve/reject)
-        async function processRequest(branchId, requestId, action) {
-            try {
-                // محاكاة معالجة الطلب
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // تحديث واجهة المستخدم
-                const requestElement = document.querySelector(`[onclick*="${requestId}"]`).closest('.pending-item, .approved-item, .rejected-item');
-                
-                if (action === 'approved') {
-                    requestElement.className = requestElement.className.replace('pending-item', 'approved-item');
-                    requestElement.querySelector('.status-pending').className = 'status-approved text-white text-xs px-2 py-1 rounded-full';
-                    requestElement.querySelector('.status-approved').textContent = 'معتمد';
-                    
-                    // إخفاء أزرار الموافقة والرفض
-                    const actionButtons = requestElement.querySelectorAll('.approve-btn, .reject-btn');
-                    actionButtons.forEach(btn => btn.style.display = 'none');
-                    
-                    showNotification('تم اعتماد الطلب بنجاح', 'success');
-                } else {
-                    requestElement.className = requestElement.className.replace('pending-item', 'rejected-item');
-                    requestElement.querySelector('.status-pending').className = 'status-rejected text-white text-xs px-2 py-1 rounded-full';
-                    requestElement.querySelector('.status-rejected').textContent = 'مرفوض';
-                    
-                    showNotification('تم رفض الطلب', 'error');
-                }
-                
-                // تحديث الإحصائيات
-                updateStats();
-                
-            } catch (error) {
-                console.error('خطأ في معالجة الطلب:', error);
-                showNotification('حدث خطأ أثناء معالجة الطلب', 'error');
-            }
         }
         
         // Update statistics
         function updateStats() {
-            const pendingCount = document.querySelectorAll('.pending-item').length;
-            document.getElementById('pendingRequests').textContent = pendingCount;
+            const pendingCount = pendingRequests.length;
+            const pendingElement = document.getElementById('pendingRequests');
+            if (pendingElement) {
+                pendingElement.textContent = pendingCount;
+            }
         }
         
         // Show notification
@@ -496,33 +511,44 @@
         }
         
         // Event listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            // Modal events
-            document.getElementById('confirmApprove').addEventListener('click', () => {
-                document.getElementById('approvalModal').classList.add('hidden');
-                if (currentBranchId && currentRequestId) {
-                    processRequest(currentBranchId, currentRequestId, 'approved');
-                }
-            });
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 تم تحميل صفحة المدير');
             
-            document.getElementById('cancelApprove').addEventListener('click', () => {
-                document.getElementById('approvalModal').classList.add('hidden');
-            });
+            // انتظار تحميل Supabase Service
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            const waitForSupabase = async () => {
+                if (window.supabaseService && window.supabaseService.getPendingRequests) {
+                    console.log('✅ تم العثور على Supabase Service');
+                    await loadPendingRequests();
+                    return;
+                }
+                
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`⏳ محاولة ${retryCount}/${maxRetries} - انتظار Supabase Service...`);
+                    setTimeout(waitForSupabase, 500);
+                } else {
+                    console.error('❌ فشل في تحميل Supabase Service');
+                    displayNoRequests();
+                }
+            };
+            
+            await waitForSupabase();
             
             // Logout
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                if (confirm('هل تريد تسجيل الخروج؟')) {
-                    localStorage.clear();
-                    window.location.href = '../auth/login.html';
-                }
-            });
-            
-            // Close modal on outside click
-            document.getElementById('approvalModal').addEventListener('click', (e) => {
-                if (e.target.id === 'approvalModal') {
-                    document.getElementById('approvalModal').classList.add('hidden');
-                }
-            });
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    if (confirm('هل تريد تسجيل الخروج؟')) {
+                        if (window.supabaseService && window.supabaseService.signOutUser) {
+                            await window.supabaseService.signOutUser();
+                        }
+                        window.location.href = '../auth/login.html';
+                    }
+                });
+            }
         });
     </script>
 </body>
