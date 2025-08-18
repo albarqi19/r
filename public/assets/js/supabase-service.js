@@ -240,10 +240,18 @@ async function updateBranch(branchId, updateData) {
         }
 
         // إضافة metadata للتحديث
+        const cleanedData = { ...updateData };
+        
+        // إزالة الحقول التي قد تسبب تضارب
+        delete cleanedData.updatedAt; // هذا من الفرونت إند
+        delete cleanedData.updated_at; // قد يكون موجود
+        delete cleanedData.created_at; // لا نريد تحديثه
+        delete cleanedData.updated_by; // سنضيفه نحن
+        
         const updatedData = {
-            ...updateData,
+            ...cleanedData,
             updated_at: new Date().toISOString(),
-            updated_by: userInfo ? userInfo.uid : 'admin'
+            updated_by: userInfo ? userInfo.uid : null
         };
 
         console.log('📝 البيانات المحدثة:', updatedData);
