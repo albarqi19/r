@@ -45,7 +45,7 @@ window.supabaseService = {
     getAllBranches: null,
     getBranch: null,
     updateBranch: null,
-    saveBranchDataDirectly: null,
+    createUpdateRequest: null,
     approveUpdateRequest: null,
     rejectUpdateRequest: null,
     getPendingRequests: null,
@@ -226,32 +226,37 @@ async function getBranch(branchId) {
 // تحديث بيانات فرع في Supabase
 async function updateBranch(branchId, updateData) {
     try {
-        // التحقق من جلسة المستخدم في localStorage
-        const userSession = localStorage.getItem('userSession');
-        if (!userSession) {
-            throw new Error('يجب تسجيل الدخول أولاً');
-        }
+        console.log('🔄 تحديث بيانات الفرع:', branchId, updateData);
 
-        let userInfo;
-        try {
-            userInfo = JSON.parse(userSession);
-        } catch (e) {
-            throw new Error('جلسة المستخدم غير صالحة');
+        // التحقق من جلسة المستخدم (اختياري للمدير)
+        let userInfo = null;
+        const userSession = localStorage.getItem('userSession');
+        if (userSession) {
+            try {
+                userInfo = JSON.parse(userSession);
+            } catch (e) {
+                console.log('تحذير: جلسة المستخدم غير صالحة');
+            }
         }
 
         // إضافة metadata للتحديث
         const updatedData = {
             ...updateData,
             updated_at: new Date().toISOString(),
-            updated_by: userInfo.uid
+            updated_by: userInfo ? userInfo.uid : 'admin'
         };
+
+        console.log('📝 البيانات المحدثة:', updatedData);
 
         const { data, error } = await supabaseClient
             .from('branches')
             .update(updatedData)
             .eq('id', branchId);
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ خطأ في تحديث قاعدة البيانات:', error);
+            throw error;
+        }
         
         console.log('✅ تم تحديث بيانات الفرع في Supabase:', branchId);
         return { success: true };
@@ -294,28 +299,53 @@ async function saveBranchDataDirectly(branchId, updateData) {
     }
 }
 
+// إنشاء طلب تحديث في Supabase (نظام طلبات الموافقة)
+async function createUpdateRequest(branchId, requestData) {
+    try {
+        console.log('🚀 بدء إنشاء طلب تحديث...', {
+            branchId: branchId,
+            requestData: requestData,
+            supabaseClient: !!supabaseClient
+        });
+
+        if (!supabaseClient) {
+            throw new Error('Supabase client غير متاح');
+        }
+
+        // إنشاء طلب تحديث في جدول update_requests
+        const request = {
+            branch_id: branchId,
+            request_data: JSON.stringify(requestData), // تحويل إلى JSON string
+            status: 'pending',
+            requested_at: new Date().toISOString(),
+            requested_by: `branch_user_${branchId}` // معرف بسيط للفرع
+        };
+
+        console.log('📝 بيانات الطلب:', request);
+
+        const { data, error } = await supabaseClient
+            .from('update_requests')
+            .insert([request])
+            .select();
+
+        if (error) {
+            console.error('❌ خطأ في إنشاء طلب التحديث:', error);
+            throw error;
+        }
+        
+        console.log('✅ تم إنشاء طلب التحديث في Supabase:', data[0]);
+        return { success: true, requestId: data[0].id };
+        
+    } catch (error) {
+        console.error('❌ خطأ في إنشاء طلب التحديث:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // موافقة على طلب التحديث في Supabase
 async function approveUpdateRequest(requestId) {
     try {
-        // التحقق من جلسة المستخدم في localStorage
-        const userSession = localStorage.getItem('userSession');
-        if (!userSession) {
-            throw new Error('يجب تسجيل الدخول أولاً');
-        }
-
-        let userInfo;
-        try {
-            userInfo = JSON.parse(userSession);
-        } catch (e) {
-            throw new Error('جلسة المستخدم غير صالحة');
-        }
-
-        // التحقق من الصلاحيات (المدير فقط)
-        if (userInfo.role !== 'admin') {
-            throw new Error('ليس لديك صلاحية لهذا الإجراء - مطلوب دور المدير');
-        }
-
-        console.log('🔍 مدير يوافق على الطلب:', requestId, 'بواسطة:', userInfo.email);
+        console.log('🔍 بدء الموافقة على الطلب:', requestId);
 
         // جلب طلب التحديث
         const { data: requestData, error: requestError } = await supabaseClient
@@ -325,23 +355,41 @@ async function approveUpdateRequest(requestId) {
             .single();
         
         if (requestError || !requestData) {
+            console.error('❌ طلب التحديث غير موجود:', requestError);
             throw new Error('طلب التحديث غير موجود');
         }
 
+        console.log('📋 بيانات الطلب:', requestData);
+
+        // تحليل البيانات المطلوبة
+        const updatedData = typeof requestData.request_data === 'string' 
+            ? JSON.parse(requestData.request_data) 
+            : requestData.request_data;
+            
+        console.log('📝 البيانات المحللة:', updatedData);
+
         // تطبيق التحديث على الفرع
-        await updateBranch(requestData.branch_id, requestData.request_data);
+        console.log('🔄 تطبيق التحديث على الفرع:', requestData.branch_id);
+        const updateResult = await updateBranch(requestData.branch_id, updatedData);
+        
+        if (!updateResult.success) {
+            throw new Error('فشل في تطبيق التحديث على الفرع: ' + updateResult.error);
+        }
         
         // تحديث حالة الطلب
         const { error: updateError } = await supabaseClient
             .from('update_requests')
             .update({
                 status: 'approved',
-                approved_by: userInfo.uid,
+                approved_by: 'admin',
                 approved_at: new Date().toISOString()
             })
             .eq('id', requestId);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+            console.error('❌ فشل في تحديث حالة الطلب:', updateError);
+            throw updateError;
+        }
         
         console.log('✅ تم اعتماد طلب التحديث في Supabase:', requestId);
         return { success: true };
@@ -395,27 +443,34 @@ async function rejectUpdateRequest(requestId, reason = '') {
 }
 
 // جلب طلبات التحديث المعلقة من Supabase
+// جلب الطلبات المعلقة من Supabase
 async function getPendingRequests() {
     try {
+        console.log('📋 جلب الطلبات المعلقة...');
+        
+        if (!supabaseClient) {
+            throw new Error('Supabase client غير متاح');
+        }
+
         const { data, error } = await supabaseClient
             .from('update_requests')
             .select('*')
-            .eq('status', 'pending');
+            .eq('status', 'pending')
+            .order('requested_at', { ascending: false });
 
-        if (error) throw error;
-            
-        // تحويل البيانات لنفس تنسيق Firebase
-        const requests = {};
-        data.forEach(request => {
-            requests[request.id] = request;
-        });
+        if (error) {
+            console.error('❌ خطأ في جلب الطلبات:', error);
+            throw error;
+        }
         
-        console.log('✅ تم جلب الطلبات المعلقة من Supabase:', Object.keys(requests).length);
-        return { success: true, data: requests };
+        console.log('✅ تم جلب الطلبات المعلقة:', data.length, 'طلب');
+        
+        // إرجاع المصفوفة مباشرة
+        return data || [];
         
     } catch (error) {
         console.error('❌ خطأ في جلب الطلبات المعلقة:', error);
-        return { success: false, error: error.message };
+        return [];
     }
 }
 
@@ -662,7 +717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.supabaseService.getAllBranches = getAllBranches;
             window.supabaseService.getBranch = getBranch;
             window.supabaseService.updateBranch = updateBranch;
-            window.supabaseService.saveBranchDataDirectly = saveBranchDataDirectly;
+            window.supabaseService.createUpdateRequest = createUpdateRequest;
             window.supabaseService.approveUpdateRequest = approveUpdateRequest;
             window.supabaseService.rejectUpdateRequest = rejectUpdateRequest;
             window.supabaseService.getPendingRequests = getPendingRequests;

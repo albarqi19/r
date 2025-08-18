@@ -226,32 +226,37 @@ async function getBranch(branchId) {
 // تحديث بيانات فرع في Supabase
 async function updateBranch(branchId, updateData) {
     try {
-        // التحقق من جلسة المستخدم في localStorage
-        const userSession = localStorage.getItem('userSession');
-        if (!userSession) {
-            throw new Error('يجب تسجيل الدخول أولاً');
-        }
+        console.log('🔄 تحديث بيانات الفرع:', branchId, updateData);
 
-        let userInfo;
-        try {
-            userInfo = JSON.parse(userSession);
-        } catch (e) {
-            throw new Error('جلسة المستخدم غير صالحة');
+        // التحقق من جلسة المستخدم (اختياري للمدير)
+        let userInfo = null;
+        const userSession = localStorage.getItem('userSession');
+        if (userSession) {
+            try {
+                userInfo = JSON.parse(userSession);
+            } catch (e) {
+                console.log('تحذير: جلسة المستخدم غير صالحة');
+            }
         }
 
         // إضافة metadata للتحديث
         const updatedData = {
             ...updateData,
             updated_at: new Date().toISOString(),
-            updated_by: userInfo.uid
+            updated_by: userInfo ? userInfo.uid : 'admin'
         };
+
+        console.log('📝 البيانات المحدثة:', updatedData);
 
         const { data, error } = await supabaseClient
             .from('branches')
             .update(updatedData)
             .eq('id', branchId);
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ خطأ في تحديث قاعدة البيانات:', error);
+            throw error;
+        }
         
         console.log('✅ تم تحديث بيانات الفرع في Supabase:', branchId);
         return { success: true };
@@ -297,16 +302,26 @@ async function saveBranchDataDirectly(branchId, updateData) {
 // إنشاء طلب تحديث في Supabase (نظام طلبات الموافقة)
 async function createUpdateRequest(branchId, requestData) {
     try {
-        console.log('🚀 بدء إنشاء طلب تحديث...', branchId, requestData);
+        console.log('🚀 بدء إنشاء طلب تحديث...', {
+            branchId: branchId,
+            requestData: requestData,
+            supabaseClient: !!supabaseClient
+        });
+
+        if (!supabaseClient) {
+            throw new Error('Supabase client غير متاح');
+        }
 
         // إنشاء طلب تحديث في جدول update_requests
         const request = {
             branch_id: branchId,
-            request_data: requestData,
+            request_data: JSON.stringify(requestData), // تحويل إلى JSON string
             status: 'pending',
             requested_at: new Date().toISOString(),
             requested_by: `branch_user_${branchId}` // معرف بسيط للفرع
         };
+
+        console.log('📝 بيانات الطلب:', request);
 
         const { data, error } = await supabaseClient
             .from('update_requests')
@@ -346,9 +361,16 @@ async function approveUpdateRequest(requestId) {
 
         console.log('📋 بيانات الطلب:', requestData);
 
+        // تحليل البيانات المطلوبة
+        const updatedData = typeof requestData.request_data === 'string' 
+            ? JSON.parse(requestData.request_data) 
+            : requestData.request_data;
+            
+        console.log('📝 البيانات المحللة:', updatedData);
+
         // تطبيق التحديث على الفرع
         console.log('🔄 تطبيق التحديث على الفرع:', requestData.branch_id);
-        const updateResult = await updateBranch(requestData.branch_id, requestData.request_data);
+        const updateResult = await updateBranch(requestData.branch_id, updatedData);
         
         if (!updateResult.success) {
             throw new Error('فشل في تطبيق التحديث على الفرع: ' + updateResult.error);
@@ -421,27 +443,34 @@ async function rejectUpdateRequest(requestId, reason = '') {
 }
 
 // جلب طلبات التحديث المعلقة من Supabase
+// جلب الطلبات المعلقة من Supabase
 async function getPendingRequests() {
     try {
+        console.log('📋 جلب الطلبات المعلقة...');
+        
+        if (!supabaseClient) {
+            throw new Error('Supabase client غير متاح');
+        }
+
         const { data, error } = await supabaseClient
             .from('update_requests')
             .select('*')
-            .eq('status', 'pending');
+            .eq('status', 'pending')
+            .order('requested_at', { ascending: false });
 
-        if (error) throw error;
-            
-        // تحويل البيانات لنفس تنسيق Firebase
-        const requests = {};
-        data.forEach(request => {
-            requests[request.id] = request;
-        });
+        if (error) {
+            console.error('❌ خطأ في جلب الطلبات:', error);
+            throw error;
+        }
         
-        console.log('✅ تم جلب الطلبات المعلقة من Supabase:', Object.keys(requests).length);
-        return { success: true, data: requests };
+        console.log('✅ تم جلب الطلبات المعلقة:', data.length, 'طلب');
+        
+        // إرجاع المصفوفة مباشرة
+        return data || [];
         
     } catch (error) {
         console.error('❌ خطأ في جلب الطلبات المعلقة:', error);
-        return { success: false, error: error.message };
+        return [];
     }
 }
 

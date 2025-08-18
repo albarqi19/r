@@ -67,10 +67,6 @@
                 
                 <!-- User Actions -->
                 <div class="flex items-center gap-3">
-                    <button id="checkSessionBtn" class="bg-yellow-500/80 hover:bg-yellow-500 text-white px-3 py-2 rounded-lg text-xs transition-all">
-                        <i class="fas fa-user-check ml-1"></i>
-                        تحقق من الجلسة
-                    </button>
                     <button id="previewBtn" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all">
                         <i class="fas fa-eye ml-2"></i>
                         معاينة الصفحة
@@ -252,31 +248,12 @@
     </div>
 
     <!-- Scripts -->
-    <script>
-        // Fallback للتأكد من وجود supabaseService
-        console.log('🔧 Dashboard: Fallback check for supabaseService...');
-        if (!window.supabaseService) {
-            console.log('⚠️ Dashboard: إنشاء supabaseService fallback');
-            window.supabaseService = {
-                checkSession: function() {
-                    console.log('🔍 Fallback checkSession');
-                    return { hasSession: false, user: null };
-                },
-                createUpdateRequest: function() {
-                    console.log('⚠️ Fallback createUpdateRequest - ستكون متوفرة قريباً');
-                    return Promise.resolve({ success: false, error: 'Service not ready' });
-                }
-            };
-        }
-    </script>
     <script src="../assets/js/supabase-service.js"></script>
     <script src="../assets/js/app.js"></script>
     <script>
         class DashboardManager {
             constructor() {
                 this.currentBranch = this.getBranchFromPath();
-                console.log('🎯 DashboardManager constructor - Supabase Service متوفر؟', !!window.supabaseService);
-                // بدء التهيئة فوراً
                 this.init();
             }
             
@@ -286,45 +263,9 @@
             }
             
             async init() {
-                // التحقق من جلسة المستخدم
-                if (!this.checkUserSession()) {
-                    return;
-                }
-                
                 this.setupEventListeners();
                 await this.loadBranchData();
                 this.updateUI();
-                
-                // التحقق من وجود طلبات معلقة
-                this.checkPendingRequests();
-            }
-
-            checkUserSession() {
-                // بما أن التخزين المحلي تم إلغاؤه، نفترض أن المستخدم مُخوَّل
-                console.log('✅ تم السماح بالوصول (تم إلغاء التحقق من localStorage)');
-                return true;
-            }
-
-            // وظيفة للتحقق من حالة الجلسة وعرضها
-            checkSessionStatus() {
-                const userSession = localStorage.getItem('userSession');
-                const currentBranch = localStorage.getItem('currentBranch');
-                const userToken = localStorage.getItem('userToken');
-
-                const sessionInfo = {
-                    userSession: userSession ? JSON.parse(userSession) : null,
-                    currentBranch: currentBranch,
-                    userToken: userToken
-                };
-
-                console.log('=== معلومات الجلسة الحالية ===', sessionInfo);
-                
-                // عرض تنبيه للمستخدم
-                const sessionText = userSession ? 
-                    `المستخدم: ${JSON.parse(userSession).username}\nالصلاحية: ${JSON.parse(userSession).role}\nالفرع: ${currentBranch || 'غير محدد'}` :
-                    'لا توجد جلسة مستخدم';
-                    
-                alert(`معلومات الجلسة:\n${sessionText}`);
             }
             
             setupEventListeners() {
@@ -332,11 +273,6 @@
                 document.getElementById('socialLinksForm').addEventListener('submit', (e) => {
                     e.preventDefault();
                     this.saveSocialLinks();
-                });
-
-                // التحقق من الجلسة
-                document.getElementById('checkSessionBtn').addEventListener('click', () => {
-                    this.checkSessionStatus();
                 });
                 
                 // معاينة الصفحة
@@ -355,66 +291,18 @@
             }
             
             async loadBranchData() {
-                console.log('📥 تحميل بيانات الفرع:', this.currentBranch);
-                
-                try {
-                    // محاولة جلب البيانات من Supabase
-                    if (window.supabaseService && typeof window.supabaseService.getAllBranches === 'function') {
-                        console.log('🔥 جلب جميع بيانات الفروع من Supabase...');
-                        const result = await window.supabaseService.getAllBranches();
-                        
-                        if (result.success && result.data) {
-                            console.log('✅ تم جلب جميع البيانات من Supabase:', Object.keys(result.data).length, 'فرع');
-                            
-                            // البحث عن الفرع المحدد
-                            const branchData = result.data[this.currentBranch];
-                            if (branchData) {
-                                console.log('✅ تم العثور على بيانات الفرع:', branchData.name);
-                                this.branchData = branchData;
-                                return;
-                            } else {
-                                console.error('❌ لم يتم العثور على الفرع:', this.currentBranch);
-                                // استخدام أول فرع متاح كبديل
-                                const firstBranch = Object.keys(result.data)[0];
-                                if (firstBranch) {
-                                    console.log('🔄 استخدام الفرع الأول كبديل:', firstBranch);
-                                    this.currentBranch = firstBranch;
-                                    this.branchData = result.data[firstBranch];
-                                    return;
-                                }
-                                throw new Error('لا توجد بيانات فروع');
-                            }
-                        } else {
-                            console.error('❌ فشل في جلب البيانات من Supabase:', result.error);
-                            throw new Error('فشل في تحميل البيانات: ' + result.error);
-                        }
-                    } else {
-                        console.error('❌ Supabase Service غير متوفر أو getAllBranches غير موجود');
-                        console.log('🔍 المتوفر:', window.supabaseService ? Object.keys(window.supabaseService) : 'لا شيء');
-                        throw new Error('Supabase Service غير متوفر');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ خطأ في تحميل بيانات الفرع:', error);
-                    // عرض رسالة خطأ للمستخدم
-                    document.body.innerHTML = `
-                        <div class="min-h-screen bg-gray-100 flex items-center justify-center">
-                            <div class="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-                                <div class="text-red-500 mb-4">
-                                    <svg class="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-bold text-gray-800 mb-2">خطأ في تحميل البيانات</h3>
-                                <p class="text-gray-600 mb-4">${error.message}</p>
-                                <p class="text-sm text-gray-500 mb-4">يرجى التأكد من الاتصال بالإنترنت وإعدادات قاعدة البيانات</p>
-                                <button onclick="location.reload()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                                    إعادة المحاولة
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    return; // إنهاء الدالة هنا بدلاً من تحميل بيانات افتراضية
+                // جلب بيانات الفرع
+                if (window.branchManager) {
+                    this.branchData = await window.branchManager.loadBranchData(this.currentBranch);
+                } else {
+                    // استخدام البيانات المحلية مؤقتاً
+                    this.branchData = {
+                        name: 'غرب الدمام',
+                        twitter: 'https://x.com/Org2Qer',
+                        whatsapp: '966138360356',
+                        instagram: 'https://www.instagram.com/org2qer/',
+                        location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9'
+                    };
                 }
             }
             
@@ -431,67 +319,7 @@
                 document.getElementById('locationUrl').value = this.branchData.location || '';
             }
             
-            // وظيفة انتظار تحميل Firebase
-            async waitForFirebase(maxWaitTime = 3000) {
-                console.log('🔍 waitForFirebase: بدء الفحص...');
-                
-                // التحقق الفوري
-                if (window.supabaseService) {
-                    if (typeof window.supabaseService.createUpdateRequest === 'function') {
-                        console.log('✅ Supabase Service جاهز مسبقاً - createUpdateRequest متوفر');
-                        return true;
-                    } else if (window.supabaseService.checkSession) {
-                        console.log('⚡ Supabase Service موجود لكن الدوال لم تحدث بعد - سنحاول المتابعة');
-                        return true;
-                    }
-                }
-                
-                console.log('🔍 window.supabaseService موجود؟', !!window.supabaseService);
-                if (window.supabaseService) {
-                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.supabaseService.createUpdateRequest);
-                }
-                
-                return new Promise((resolve) => {
-                    const startTime = Date.now();
-                    
-                    const checkFirebase = () => {
-                        if (window.supabaseService) {
-                            if (typeof window.supabaseService.createUpdateRequest === 'function') {
-                                console.log('✅ Supabase Service جاهز للاستخدام - createUpdateRequest متوفر');
-                                resolve(true);
-                                return;
-                            } else {
-                                // إذا كان Firebase موجود لكن الدوال لم تحدث بعد
-                                if (Date.now() - startTime > 1000) {
-                                    console.log('⚡ Firebase موجود لكن الدوال لم تحدث - سنتابع');
-                                    resolve(true);
-                                    return;
-                                }
-                            }
-                        }
-                        
-                        if (Date.now() - startTime > maxWaitTime) {
-                            console.error('❌ انتهت مهلة انتظار Supabase Service');
-                            resolve(false);
-                            return;
-                        }
-                        
-                        setTimeout(checkFirebase, 100);
-                    };
-                    
-                    checkFirebase();
-                });
-            }
-
             async saveSocialLinks() {
-                // Debug: التحقق من الجلسة
-                const userSession = localStorage.getItem('userSession');
-                console.log('🔍 التحقق من الجلسة:', userSession ? 'موجودة' : 'غير موجودة');
-                if (userSession) {
-                    const user = JSON.parse(userSession);
-                    console.log('👤 بيانات المستخدم:', user);
-                }
-
                 const submitBtn = document.querySelector('#socialLinksForm button[type="submit"]');
                 const spinner = document.getElementById('saveSpinner');
                 
@@ -505,42 +333,46 @@
                         twitter: document.getElementById('twitterUrl').value,
                         instagram: document.getElementById('instagramUrl').value,
                         whatsapp: document.getElementById('whatsappNumber').value,
-                        location: document.getElementById('locationUrl').value
+                        location: document.getElementById('locationUrl').value,
+                        updatedAt: new Date().toISOString()
                     };
                     
-                    console.log('🚀 dashboard: بدء عملية الحفظ المباشر...');
-                    
-                    // التحقق من وجود Supabase Service
-                    if (!window.supabaseService) {
-                        throw new Error('Supabase Service غير متوفر');
+                    // محاولة الحفظ في Supabase
+                    if (!window.supabaseService || !window.supabaseService.createUpdateRequest) {
+                        throw new Error('خدمة Supabase غير متوفرة');
                     }
                     
-                    // استخدام الحفظ المباشر
-                    if (typeof window.supabaseService.saveBranchDataDirectly === 'function') {
-                        console.log('✅ saveBranchDataDirectly متوفرة - حفظ البيانات مباشرة');
-                        const result = await window.supabaseService.saveBranchDataDirectly(
-                            this.currentBranch, 
-                            formData
+                    console.log('📤 إرسال طلب تحديث للمراجعة...');
+                    const result = await window.supabaseService.createUpdateRequest(
+                        this.currentBranch, 
+                        formData
+                    );
+                    
+                    if (result.success) {
+                        this.showNotification(
+                            'تم إرسال طلب التحديث للإدارة! سيتم تطبيق التغييرات بعد الموافقة.',
+                            'success'
                         );
                         
-                        console.log('📋 dashboard: نتيجة الحفظ المباشر:', result);
+                        // تحديث حالة الصفحة
+                        this.updateStatusToPending();
                         
-                        if (result.success) {
-                            console.log('✅ dashboard: نجح الحفظ المباشر');
-                            this.showNotification('تم حفظ التغييرات بنجاح!', 'success');
-                            
-                            // إعادة تحميل البيانات من قاعدة البيانات
-                            await this.loadBranchData();
-                        } else {
-                            throw new Error(result.error || 'فشل في حفظ البيانات');
+                        // تسجيل الحدث إذا كانت الدالة متوفرة
+                        if (window.supabaseService.logEvent) {
+                            window.supabaseService.logEvent('update_request_created', {
+                                branch_id: this.currentBranch,
+                                request_type: 'social_links'
+                            });
                         }
+                        
+                        return;
                     } else {
-                        throw new Error('دالة الحفظ المباشر غير متوفرة');
+                        throw new Error(result.error || 'فشل في إنشاء طلب التحديث');
                     }
                     
                 } catch (error) {
-                    console.error('❌ خطأ في الحفظ:', error);
-                    this.showNotification('حدث خطأ أثناء حفظ البيانات: ' + error.message, 'error');
+                    console.error('خطأ في الحفظ:', error);
+                    this.showNotification('حدث خطأ أثناء حفظ البيانات', 'error');
                 } finally {
                     // إخفاء حالة التحميل
                     submitBtn.disabled = false;
@@ -553,49 +385,6 @@
                 if (statusElement) {
                     statusElement.className = 'status-pending text-white text-xs px-3 py-1 rounded-full';
                     statusElement.textContent = 'في الانتظار';
-                }
-                
-                // حفظ حالة الانتظار في localStorage
-                const pendingStatus = {
-                    branchId: this.currentBranch,
-                    status: 'pending',
-                    timestamp: Date.now(),
-                    message: 'يوجد طلب تحديث في الانتظار'
-                };
-                
-                let pendingRequests = JSON.parse(localStorage.getItem('pendingRequests') || '{}');
-                pendingRequests[this.currentBranch] = pendingStatus;
-                localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
-                
-                console.log('💾 تم حفظ حالة الانتظار:', pendingStatus);
-            }
-            
-            checkPendingRequests() {
-                const pendingRequests = JSON.parse(localStorage.getItem('pendingRequests') || '{}');
-                const currentPending = pendingRequests[this.currentBranch];
-                
-                if (currentPending && currentPending.status === 'pending') {
-                    console.log('🔍 تم العثور على طلب معلق:', currentPending);
-                    
-                    // التحقق إذا كان الطلب حديث (خلال آخر 24 ساعة)
-                    const hoursSinceRequest = (Date.now() - currentPending.timestamp) / (1000 * 60 * 60);
-                    if (hoursSinceRequest < 24) {
-                        console.log('⏳ تطبيق حالة الانتظار على الواجهة');
-                        
-                        // تطبيق حالة الانتظار على الواجهة
-                        const statusElement = document.querySelector('.status-approved, .status-pending');
-                        if (statusElement) {
-                            statusElement.className = 'status-pending text-white text-xs px-3 py-1 rounded-full';
-                            statusElement.textContent = 'في الانتظار';
-                        }
-                        
-                        // إضافة رسالة تنبيه
-                        this.showNotification('يوجد طلب تحديث في الانتظار للموافقة عليه من الإدارة', 'info');
-                    } else {
-                        console.log('🗑️ الطلب قديم - حذف من localStorage');
-                        delete pendingRequests[this.currentBranch];
-                        localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
-                    }
                 }
             }
             
@@ -613,40 +402,40 @@
         }
         
         // تهيئة لوحة التحكم عند تحميل الصفحة
-        window.addEventListener('load', async () => {
-            console.log('🔄 Page loaded - بدء تهيئة Dashboard...');
-            console.log('🔍 جميع scripts في head:', Array.from(document.querySelectorAll('script')).map(s => s.src));
-            console.log('🔍 هل تم تحميل Firebase في window؟', !!window.firebase);
-            console.log('🔍 هل تم إنشاء supabaseService؟', !!window.supabaseService);
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 تحميل لوحة تحكم الفرع...');
             
             // انتظار تحميل Supabase Service
-            let attempts = 0;
-            const maxAttempts = 50; // 5 ثواني
+            let retryCount = 0;
+            const maxRetries = 10;
             
-            while (attempts < maxAttempts) {
-                if (window.supabaseService) {
-                    console.log('✅ window.supabaseService موجود - التحقق من الدوال...');
-                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.supabaseService.createUpdateRequest);
-                    console.log('🔍 getAllBranches متوفر؟', typeof window.supabaseService.getAllBranches);
-                    
-                    // التحقق من وجود أي دالة Firebase أو إذا كان Firebase جاهز
-                    if (window.supabaseService.createUpdateRequest || 
-                        window.supabaseService.getAllBranches || 
-                        (window.supabaseService.checkSession && attempts > 10)) {
-                        console.log('✅ Supabase Service متوفر - إنشاء Dashboard Manager');
-                        window.dashboardManager = new DashboardManager();
-                        return;
-                    }
-                } else {
-                    console.log(`⏳ window.supabaseService غير موجود - محاولة ${attempts + 1}/${maxAttempts}`);
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
+            const waitForSupabase = () => {
+                return new Promise((resolve) => {
+                    const checkSupabase = () => {
+                        if (window.supabaseService && window.supabaseService.createUpdateRequest) {
+                            console.log('✅ تم العثور على Supabase Service');
+                            resolve();
+                            return;
+                        }
+                        
+                        if (retryCount < maxRetries) {
+                            retryCount++;
+                            console.log(`⏳ محاولة ${retryCount}/${maxRetries} - انتظار Supabase Service...`);
+                            setTimeout(checkSupabase, 500);
+                        } else {
+                            console.error('❌ فشل في تحميل Supabase Service');
+                            resolve(); // المتابعة حتى لو فشل
+                        }
+                    };
+                    checkSupabase();
+                });
+            };
             
-            console.error('❌ لم يتم تحميل Supabase Service - إنشاء Dashboard بدون Firebase');
+            await waitForSupabase();
+            
+            // تهيئة لوحة التحكم
             window.dashboardManager = new DashboardManager();
+            console.log('✅ تم تحميل لوحة تحكم الفرع');
         });
     </script>
 </body>

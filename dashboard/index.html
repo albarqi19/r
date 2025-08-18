@@ -258,8 +258,19 @@
             }
             
             getBranchFromPath() {
-                // يمكن استخراجه من localStorage أو URL parameters
-                return localStorage.getItem('currentBranch') || 'garb-dammam';
+                // محاولة استخراج الفرع من URL أو localStorage
+                const urlParams = new URLSearchParams(window.location.search);
+                const branchFromUrl = urlParams.get('branch');
+                
+                if (branchFromUrl) {
+                    // حفظ في localStorage للاستخدام المستقبلي
+                    localStorage.setItem('currentBranch', branchFromUrl);
+                    return branchFromUrl;
+                }
+                
+                // العودة للمحفوظ في localStorage أو القيمة الافتراضية
+                const savedBranch = localStorage.getItem('currentBranch');
+                return savedBranch || 'garb-dammam';
             }
             
             async init() {
@@ -338,48 +349,37 @@
                     };
                     
                     // محاولة الحفظ في Supabase
-                    if (window.supabaseService) {
-                        try {
-                            // إنشاء طلب تحديث للموافقة
-                            const result = await window.supabaseService.createUpdateRequest(
-                                this.currentBranch, 
-                                formData
-                            );
-                            
-                            if (result.success) {
-                                this.showNotification(
-                                    'تم إرسال طلب التحديث للإدارة! سيتم تطبيق التغييرات بعد الموافقة.',
-                                    'success'
-                                );
-                                
-                                // تحديث حالة الصفحة
-                                this.updateStatusToPending();
-                                
-                                // تسجيل الحدث
-                                window.supabaseService.logEvent('update_request_created', {
-                                    branch_id: this.currentBranch,
-                                    request_type: 'social_links'
-                                });
-                                
-                                return;
-                            }
-                        } catch (supabaseError) {
-                            console.log('فشل Supabase، استخدام التخزين المحلي');
-                        }
+                    if (!window.supabaseService || !window.supabaseService.createUpdateRequest) {
+                        throw new Error('خدمة Supabase غير متوفرة');
                     }
                     
-                    // Fallback للتخزين المحلي
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    this.showNotification(
-                        'تم حفظ التغييرات محلياً! يرجى التأكد من الاتصال بالإنترنت لمزامنة البيانات.',
-                        'success'
+                    console.log('📤 إرسال طلب تحديث للمراجعة...');
+                    const result = await window.supabaseService.createUpdateRequest(
+                        this.currentBranch, 
+                        formData
                     );
                     
-                    // حفظ محلي
-                    const localData = JSON.parse(localStorage.getItem('branchUpdates') || '{}');
-                    localData[this.currentBranch] = formData;
-                    localStorage.setItem('branchUpdates', JSON.stringify(localData));
+                    if (result.success) {
+                        this.showNotification(
+                            'تم إرسال طلب التحديث للإدارة! سيتم تطبيق التغييرات بعد الموافقة.',
+                            'success'
+                        );
+                        
+                        // تحديث حالة الصفحة
+                        this.updateStatusToPending();
+                        
+                        // تسجيل الحدث إذا كانت الدالة متوفرة
+                        if (window.supabaseService.logEvent) {
+                            window.supabaseService.logEvent('update_request_created', {
+                                branch_id: this.currentBranch,
+                                request_type: 'social_links'
+                            });
+                        }
+                        
+                        return;
+                    } else {
+                        throw new Error(result.error || 'فشل في إنشاء طلب التحديث');
+                    }
                     
                 } catch (error) {
                     console.error('خطأ في الحفظ:', error);
@@ -413,8 +413,40 @@
         }
         
         // تهيئة لوحة التحكم عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 تحميل لوحة تحكم الفرع...');
+            
+            // انتظار تحميل Supabase Service
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            const waitForSupabase = () => {
+                return new Promise((resolve) => {
+                    const checkSupabase = () => {
+                        if (window.supabaseService && window.supabaseService.createUpdateRequest) {
+                            console.log('✅ تم العثور على Supabase Service');
+                            resolve();
+                            return;
+                        }
+                        
+                        if (retryCount < maxRetries) {
+                            retryCount++;
+                            console.log(`⏳ محاولة ${retryCount}/${maxRetries} - انتظار Supabase Service...`);
+                            setTimeout(checkSupabase, 500);
+                        } else {
+                            console.error('❌ فشل في تحميل Supabase Service');
+                            resolve(); // المتابعة حتى لو فشل
+                        }
+                    };
+                    checkSupabase();
+                });
+            };
+            
+            await waitForSupabase();
+            
+            // تهيئة لوحة التحكم
             window.dashboardManager = new DashboardManager();
+            console.log('✅ تم تحميل لوحة تحكم الفرع');
         });
     </script>
 </body>
