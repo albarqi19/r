@@ -354,13 +354,27 @@
             }
 
             redirectUser(user) {
-                // جميع مدراء الفروع يذهبون إلى Dashboard
-                const redirectUrl = '../dashboard/index.html';
+                let redirectUrl;
+                let welcomeMessage;
                 
-                console.log(`🚀 توجيه مدير فرع ${user.branchName} إلى Dashboard`);
+                // تحديد وجهة التوجيه حسب دور المستخدم
+                if (user.role === 'admin') {
+                    redirectUrl = '../admin/index.html';
+                    welcomeMessage = `مرحباً بك ${user.name} - مدير النظام`;
+                    console.log('🚀 توجيه مدير النظام إلى Admin Panel');
+                } else if (user.role === 'branch') {
+                    redirectUrl = '../dashboard/index.html';
+                    welcomeMessage = `مرحباً بك في فرع ${user.name}`;
+                    console.log(`🚀 توجيه مدير فرع إلى Dashboard`);
+                } else {
+                    // fallback للمدراء العاديين
+                    redirectUrl = '../dashboard/index.html';
+                    welcomeMessage = `مرحباً بك ${user.name}`;
+                    console.log('🚀 توجيه افتراضي إلى Dashboard');
+                }
                 
                 // إضافة رسالة ترحيب
-                this.showSuccess(`مرحباً بك في فرع ${user.branchName}`);
+                this.showSuccess(welcomeMessage);
                 
                 // التوجيه بعد ثانيتين
                 setTimeout(() => {
