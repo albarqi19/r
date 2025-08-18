@@ -265,16 +265,28 @@ async function updateBranch(branchId, updateData) {
 // إنشاء طلب تحديث في Supabase
 async function createUpdateRequest(branchId, requestData) {
     try {
+        console.log('🔍 createUpdateRequest: بدء التحقق من الجلسة...');
+        
         // التحقق من جلسة المستخدم في localStorage بدلاً من Supabase Auth
         const userSession = localStorage.getItem('userSession');
+        console.log('🔍 userSession من localStorage:', userSession ? 'موجود' : 'غير موجود');
+        
         if (!userSession) {
+            console.log('❌ userSession غير موجود في localStorage');
             throw new Error('يجب تسجيل الدخول أولاً');
         }
 
         let userInfo;
         try {
             userInfo = JSON.parse(userSession);
+            console.log('✅ تم تحليل userSession:', {
+                uid: userInfo.uid,
+                email: userInfo.email,
+                role: userInfo.role,
+                branchId: userInfo.branchId
+            });
         } catch (e) {
+            console.log('❌ خطأ في تحليل userSession:', e);
             throw new Error('جلسة المستخدم غير صالحة');
         }
 

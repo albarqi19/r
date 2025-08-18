@@ -550,6 +550,27 @@
                         try {
                             console.log('🚀 dashboard: بدء عملية حفظ Firebase...');
                             
+                            // تشخيص localStorage قبل الاستدعاء
+                            const userSession = localStorage.getItem('userSession');
+                            const currentBranch = localStorage.getItem('currentBranch');
+                            console.log('🔍 dashboard: فحص localStorage قبل الاستدعاء:');
+                            console.log('  - userSession:', userSession ? 'موجود' : 'غير موجود');
+                            console.log('  - currentBranch:', currentBranch);
+                            console.log('  - this.currentBranch:', this.currentBranch);
+                            
+                            if (userSession) {
+                                try {
+                                    const parsedSession = JSON.parse(userSession);
+                                    console.log('  - معلومات الجلسة:', {
+                                        uid: parsedSession.uid,
+                                        email: parsedSession.email,
+                                        role: parsedSession.role
+                                    });
+                                } catch (e) {
+                                    console.log('  - خطأ في تحليل الجلسة:', e);
+                                }
+                            }
+                            
                             // التحقق من وجود دالة createUpdateRequest
                             if (typeof window.supabaseService.createUpdateRequest === 'function') {
                                 console.log('✅ createUpdateRequest متوفرة - إنشاء طلب التحديث');
