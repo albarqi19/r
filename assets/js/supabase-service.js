@@ -403,22 +403,11 @@ async function approveUpdateRequest(requestId) {
 // رفض طلب التحديث في Supabase
 async function rejectUpdateRequest(requestId, reason = '') {
     try {
-        // التحقق من جلسة المستخدم في localStorage
-        const userSession = localStorage.getItem('userSession');
-        if (!userSession) {
-            throw new Error('يجب تسجيل الدخول أولاً');
-        }
-
-        let userInfo;
-        try {
-            userInfo = JSON.parse(userSession);
-        } catch (e) {
-            throw new Error('جلسة المستخدم غير صالحة');
-        }
-
-        // التحقق من الصلاحيات (المدير فقط)
-        if (userInfo.role !== 'admin') {
-            throw new Error('ليس لديك صلاحية لهذا الإجراء - مطلوب دور المدير');
+        console.log('❌ رفض طلب التحديث:', requestId, 'السبب:', reason);
+        
+        // التحقق من وجود supabaseClient
+        if (!supabaseClient) {
+            throw new Error('Supabase client غير متاح');
         }
 
         const { error } = await supabaseClient
@@ -431,7 +420,10 @@ async function rejectUpdateRequest(requestId, reason = '') {
             })
             .eq('id', requestId);
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ خطأ في تحديث قاعدة البيانات:', error);
+            throw error;
+        }
         
         console.log('✅ تم رفض طلب التحديث في Supabase:', requestId);
         return { success: true };
