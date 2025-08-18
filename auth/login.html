@@ -323,12 +323,19 @@
             }
             
             validateCredentials(email, password) {
-                // بيانات تجريبية - في الواقع ستكون من Supabase
+                // بيانات تسجيل الدخول المحدثة لـ Supabase
                 const credentials = {
-                    'admin@tahfeez.com': { password: 'admin123', type: 'admin' },
-                    'manager@garb.com': { password: 'branch123', type: 'branch' },
-                    'manager@sharq.com': { password: 'branch123', type: 'branch' },
-                    'manager@khobar.com': { password: 'branch123', type: 'branch' }
+                    'admin@tahfeez-sharqiya.com': { password: 'admin123', type: 'admin' },
+                    'garb@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'khobar@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'sharq@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'baqiq@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'anak@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'wadi.almiyah@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'alsarar@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'ras.tanura@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'qaryah@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
+                    'altaeriah@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' }
                 };
                 
                 const user = credentials[email.toLowerCase()];
@@ -341,9 +348,16 @@
             
             getBranchIdFromEmail(email) {
                 const branchMap = {
-                    'manager@garb.com': 'garb-dammam',
-                    'manager@sharq.com': 'sharq-dammam',
-                    'manager@khobar.com': 'khobar'
+                    'garb@tahfeez-sharqiya.com': 'garb-dammam',
+                    'khobar@tahfeez-sharqiya.com': 'khobar',
+                    'sharq@tahfeez-sharqiya.com': 'sharq-dammam',
+                    'baqiq@tahfeez-sharqiya.com': 'baqiq',
+                    'anak@tahfeez-sharqiya.com': 'anak',
+                    'wadi.almiyah@tahfeez-sharqiya.com': 'wadi-almiyah',
+                    'alsarar@tahfeez-sharqiya.com': 'alsarar',
+                    'ras.tanura@tahfeez-sharqiya.com': 'ras-tanura',
+                    'qaryah@tahfeez-sharqiya.com': 'qaryah',
+                    'altaeriah@tahfeez-sharqiya.com': 'altaeriah'
                 };
                 
                 return branchMap[email.toLowerCase()] || 'garb-dammam';

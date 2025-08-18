@@ -264,60 +264,65 @@
                     
                     console.log('✅ Supabase Service متوفر');
                     
-                    // جلب بيانات الفروع
-                    console.log('📋 جلب بيانات الفروع من Supabase...');
-                    const branchesResult = await window.supabaseService.getAllBranches();
+                    // المحاولة الأولى: فحص بيانات المستخدمين الافتراضية
+                    console.log('� محاولة تسجيل الدخول بالبيانات الافتراضية...');
                     
-                    console.log('📊 نتيجة جلب الفروع:', branchesResult);
-                    
-                    if (!branchesResult.success) {
-                        console.error('❌ خطأ في جلب بيانات الفروع:', branchesResult.error);
-                        throw new Error('خطأ في الوصول لقاعدة البيانات: ' + branchesResult.error);
-                    }
-                    
-                    const branches = branchesResult.data;
-                    console.log('🏢 عدد الفروع الموجودة:', Object.keys(branches).length);
-
-                    if (!branches || Object.keys(branches).length === 0) {
-                        console.log('❌ لا توجد بيانات فروع في قاعدة البيانات');
-                        throw new Error('لا توجد بيانات فروع');
-                    }
-
-                    // البحث عن الفرع بإيميل وكلمة المرور تسجيل الدخول
-                    console.log('🔍 البحث في الفروع...');
-                    for (const branchId in branches) {
-                        const branch = branches[branchId];
-                        console.log(`🔍 فحص فرع ${branch.name}:`);
-                        console.log(`   - إيميل الفرع: ${branch.loginEmail}`);
-                        console.log(`   - إيميل مطلوب: ${email}`);
-                        console.log(`   - كلمة مرور موجودة: ${!!branch.loginPassword}`);
-                        
-                        if (branch.loginEmail === email && branch.loginPassword === password) {
-                            console.log('✅ تم العثور على الفرع المطابق:', branch.name);
-                            
-                            // إنشاء كائن المستخدم
-                            const user = {
-                                uid: branchId,
-                                email: branch.loginEmail,
-                                branchId: branchId,
-                                branchName: branch.name,
-                                region: branch.region,
-                                phone: branch.phone,
-                                role: 'branch_manager',
-                                loginTime: new Date().toISOString()
-                            };
-                            
-                            console.log('👤 بيانات المستخدم المُنشأة:', user);
-                            return user;
+                    // بيانات تسجيل الدخول الافتراضية
+                    const defaultCredentials = {
+                        'admin@tahfeez-sharqiya.com': {
+                            password: 'admin123',
+                            role: 'admin',
+                            name: 'مدير النظام',
+                            branchId: null
+                        },
+                        'garb@tahfeez-sharqiya.com': {
+                            password: 'admin123',
+                            role: 'branch',
+                            name: 'مسؤول فرع غرب الدمام',
+                            branchId: 'garb-dammam'
+                        },
+                        'khobar@tahfeez-sharqiya.com': {
+                            password: 'admin123',
+                            role: 'branch',
+                            name: 'مسؤول فرع الخبر',
+                            branchId: 'khobar'
+                        },
+                        'sharq@tahfeez-sharqiya.com': {
+                            password: 'admin123',
+                            role: 'branch',
+                            name: 'مسؤول فرع شرق الدمام',
+                            branchId: 'sharq-dammam'
+                        },
+                        'baqiq@tahfeez-sharqiya.com': {
+                            password: 'admin123',
+                            role: 'branch',
+                            name: 'مسؤول فرع بقيق',
+                            branchId: 'baqiq'
                         }
+                    };
+                    
+                    console.log('🔍 فحص البيانات للإيميل:', email);
+                    
+                    if (defaultCredentials[email] && defaultCredentials[email].password === password) {
+                        const credential = defaultCredentials[email];
+                        console.log('✅ تم العثور على بيانات صحيحة:', credential);
+                        
+                        // إنشاء كائن المستخدم
+                        const user = {
+                            uid: credential.branchId || 'admin',
+                            email: email,
+                            role: credential.role,
+                            name: credential.name,
+                            branchId: credential.branchId,
+                            loginTime: new Date().toISOString()
+                        };
+                        
+                        console.log('👤 بيانات المستخدم المُنشأة:', user);
+                        return user;
                     }
 
-                    console.log('❌ لم يتم العثور على فرع بهذه البيانات');
-                    console.log('🔍 البحث عن إيميل:', email);
-                    console.log('🔍 في الفروع:', Object.keys(branches).map(id => {
-                        const branch = branches[id];
-                        return { id, name: branch.name, email: branch.loginEmail };
-                    }));
+                    console.log('❌ بيانات تسجيل الدخول غير صحيحة');
+                    console.log('🔍 الإيميلات المتاحة:', Object.keys(defaultCredentials));
                     
                     return null; // لم يتم العثور على المستخدم
 
