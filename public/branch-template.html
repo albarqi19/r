@@ -105,7 +105,7 @@
         <!-- Additional Info -->
         <div class="text-center">
             <div class="w-16 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mb-4"></div>
-            <p class="text-gray-400 text-xs">© ٢٠٢٤ تحفيظ الشرقية</p>
+            <p class="text-gray-400 text-xs">© ٢٠٢٥ تحفيظ الشرقية</p>
         </div>
     </div>
 
@@ -366,7 +366,7 @@
             setupEventListeners() {
                 // زر المتجر الإلكتروني - معطل حالياً
                 document.getElementById('storeBtn').addEventListener('click', () => {
-                    this.showComingSoon('storeBtn', 'المتجر الإلكتروني قريباً جداً!');
+                    this.showComingSoon('storeBtn', 'المتجر الإلكتروني قريباً!');
                 });
 
                 // زر المشاركة
@@ -437,7 +437,7 @@
                 const button = document.getElementById(buttonId);
                 const originalHTML = button.innerHTML;
                 
-                button.innerHTML = '<i class="fas fa-clock text-lg sm:text-xl"></i><span>قريباً جداً!</span>';
+                button.innerHTML = '<i class="fas fa-clock text-lg sm:text-xl"></i><span>قريباً!</span>';
                 button.classList.remove('bg-primary');
                 button.classList.add('bg-secondary');
                 
