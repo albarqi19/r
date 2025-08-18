@@ -225,7 +225,7 @@
                     
                     if (result.success && result.data) {
                         this.branchData = result.data;
-                        console.log('✅ تم تحميل بيانات الفرع من قاعدة البيانات:', this.branchData.branch_name);
+                        console.log('✅ تم تحميل بيانات الفرع من قاعدة البيانات:', this.branchData.name || this.branchData.branch_name);
                         console.log('📋 البيانات المحملة:', this.branchData);
                         return true;
                     } else {
@@ -255,7 +255,6 @@
                     return false;
                 }
             }
-            }
 
             renderBranchPage() {
                 console.log('🎨 بدء عرض صفحة الفرع...');
@@ -264,7 +263,7 @@
                 // تحديث عنوان الصفحة
                 const pageTitle = document.getElementById('pageTitle');
                 if (pageTitle) {
-                    pageTitle.textContent = `تحفيظ الشرقية - ${this.branchData.branch_name}`;
+                    pageTitle.textContent = `تحفيظ الشرقية - ${this.branchData.name || this.branchData.branch_name || 'فرع غير محدد'}`;
                     console.log('✅ تم تحديث عنوان الصفحة:', pageTitle.textContent);
                 } else {
                     console.error('❌ لم يتم العثور على عنصر pageTitle');
@@ -273,7 +272,7 @@
                 // تحديث اسم الفرع
                 const branchName = document.getElementById('branchName');
                 if (branchName) {
-                    branchName.textContent = this.branchData.branch_name;
+                    branchName.textContent = this.branchData.name || this.branchData.branch_name || 'فرع غير محدد';
                     console.log('✅ تم تحديث اسم الفرع:', branchName.textContent);
                 } else {
                     console.error('❌ لم يتم العثور على عنصر branchName');
@@ -386,8 +385,8 @@
 
             async handleShare() {
                 const shareData = {
-                    title: `تحفيظ الشرقية - ${this.branchData.branch_name}`,
-                    text: `روابط التواصل مع تحفيظ الشرقية - ${this.branchData.branch_name}`,
+                    title: `تحفيظ الشرقية - ${this.branchData.name || this.branchData.branch_name || 'فرع غير محدد'}`,
+                    text: `روابط التواصل مع تحفيظ الشرقية - ${this.branchData.name || this.branchData.branch_name || 'فرع غير محدد'}`,
                     url: window.location.href
                 };
 
@@ -406,7 +405,7 @@
             }
 
             showFallbackShare() {
-                const shareText = `تحفيظ الشرقية - ${this.branchData.branch_name}\n${window.location.href}`;
+                const shareText = `تحفيظ الشرقية - ${this.branchData.name || this.branchData.branch_name || 'فرع غير محدد'}\n${window.location.href}`;
                 const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
                 const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
                 

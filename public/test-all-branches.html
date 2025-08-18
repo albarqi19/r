@@ -82,8 +82,8 @@
                         khobarDiv.innerHTML = `
                             <div class="text-green-600 mb-2">✅ تم العثور على فرع الخبر</div>
                             <div class="bg-green-50 p-3 rounded">
-                                <strong>الاسم:</strong> ${khobarResult.data.branch_name}<br>
-                                <strong>المعرف:</strong> ${khobarResult.data.branch_id}<br>
+                                <strong>الاسم:</strong> ${khobarResult.data.name || khobarResult.data.branch_name || 'غير محدد'}<br>
+                                <strong>المعرف:</strong> ${khobarResult.data.id || khobarResult.data.branch_id || 'غير محدد'}<br>
                                 <strong>Twitter:</strong> ${khobarResult.data.twitter || 'غير محدد'}<br>
                                 <strong>WhatsApp:</strong> ${khobarResult.data.whatsapp || 'غير محدد'}
                             </div>
@@ -116,10 +116,10 @@
                         branches.forEach(branch => {
                             branchesHtml += `
                                 <div class="bg-gray-50 p-4 rounded-lg">
-                                    <div class="font-bold text-lg">${branch.branch_name}</div>
-                                    <div class="text-sm text-gray-600">المعرف: ${branch.branch_id}</div>
+                                    <div class="font-bold text-lg">${branch.name || branch.branch_name || 'اسم غير محدد'}</div>
+                                    <div class="text-sm text-gray-600">المعرف: ${branch.id || branch.branch_id || 'معرف غير محدد'}</div>
                                     <div class="text-sm text-gray-600">آخر تحديث: ${branch.updated_at || 'غير محدد'}</div>
-                                    <a href="./branch-template.html?branch=${branch.branch_id}" 
+                                    <a href="./branch-template.html?branch=${branch.id || branch.branch_id}" 
                                        class="inline-block mt-2 bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                                        اختبار الصفحة
                                     </a>
