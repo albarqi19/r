@@ -174,47 +174,79 @@
 
             async loadBranchData() {
                 try {
-                    console.log('🔄 جلب بيانات الفرع من Supabase:', this.branchId);
+                    console.log('🔄 بدء جلب بيانات الفرع من Supabase:', this.branchId);
+                    console.log('📍 URL الحالي:', window.location.href);
                     
                     // انتظار تحميل خدمة Supabase
                     let attempts = 0;
                     while (!window.supabaseService && attempts < 50) {
+                        console.log(`⏳ محاولة ${attempts + 1}: انتظار تحميل supabaseService...`);
                         await new Promise(resolve => setTimeout(resolve, 100));
                         attempts++;
                     }
                     
-                    if (!window.supabaseService || !window.supabaseService.getBranch) {
-                        console.error('⚠️ خدمة Supabase غير متوفرة');
+                    if (!window.supabaseService) {
+                        console.error('❌ خدمة Supabase غير متوفرة بعد 5 ثوانِ');
+                        console.error('❌ window.supabaseService:', window.supabaseService);
                         return;
                     }
                     
+                    if (!window.supabaseService.getBranch) {
+                        console.error('❌ دالة getBranch غير متوفرة');
+                        console.error('❌ المتاح في supabaseService:', Object.keys(window.supabaseService));
+                        return;
+                    }
+                    
+                    console.log('✅ خدمة Supabase متوفرة ودالة getBranch موجودة');
+                    
                     // جلب بيانات الفرع من قاعدة البيانات
+                    console.log('🔍 استدعاء getBranch للفرع:', this.branchId);
                     const result = await window.supabaseService.getBranch(this.branchId);
                     console.log('📊 نتيجة جلب البيانات:', result);
                     
                     if (result.success && result.data) {
                         this.branchData = result.data;
                         console.log('✅ تم تحميل بيانات الفرع من قاعدة البيانات:', this.branchData.branch_name);
+                        console.log('📋 البيانات المحملة:', this.branchData);
                     } else {
                         console.error('❌ لم يتم العثور على الفرع في قاعدة البيانات:', this.branchId);
+                        console.error('❌ تفاصيل النتيجة:', result);
                         return;
                     }
                     
                 } catch (error) {
                     console.error('❌ خطأ في جلب بيانات الفرع من قاعدة البيانات:', error);
+                    console.error('❌ تفاصيل الخطأ:', error.stack);
                     return;
                 }
             }
 
             renderBranchPage() {
+                console.log('🎨 بدء عرض صفحة الفرع...');
+                console.log('📋 البيانات المستخدمة في العرض:', this.branchData);
+                
                 // تحديث عنوان الصفحة
-                document.getElementById('pageTitle').textContent = `تحفيظ الشرقية - ${this.branchData.branch_name}`;
+                const pageTitle = document.getElementById('pageTitle');
+                if (pageTitle) {
+                    pageTitle.textContent = `تحفيظ الشرقية - ${this.branchData.branch_name}`;
+                    console.log('✅ تم تحديث عنوان الصفحة:', pageTitle.textContent);
+                } else {
+                    console.error('❌ لم يتم العثور على عنصر pageTitle');
+                }
                 
                 // تحديث اسم الفرع
-                document.getElementById('branchName').textContent = this.branchData.branch_name;
+                const branchName = document.getElementById('branchName');
+                if (branchName) {
+                    branchName.textContent = this.branchData.branch_name;
+                    console.log('✅ تم تحديث اسم الفرع:', branchName.textContent);
+                } else {
+                    console.error('❌ لم يتم العثور على عنصر branchName');
+                }
 
                 // إنشاء أيقونات التواصل الاجتماعي
+                console.log('🔗 بدء إنشاء أيقونات التواصل...');
                 this.renderSocialIcons();
+                console.log('✅ انتهاء عرض صفحة الفرع');
             }
 
             renderSocialIcons() {
