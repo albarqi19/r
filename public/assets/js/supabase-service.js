@@ -200,14 +200,12 @@ async function getAllBranches() {
         
         if (error) throw error;
 
-        // تحويل البيانات لنفس تنسيق Firebase
-        const branches = {};
-        data.forEach(branch => {
-            branches[branch.id] = branch;
-        });
+        // إرجاع البيانات كمصفوفة للاختبار، أو كـ object للاستخدام العادي
+        console.log('✅ تم جلب بيانات الفروع من Supabase:', data.length, 'فرع');
+        console.log('🔍 عينة من البيانات المُجلبة:', data[0]); // إضافة تشخيص
         
-        console.log('✅ تم جلب بيانات الفروع من Supabase:', Object.keys(branches).length, 'فرع');
-        return { success: true, data: branches };
+        // إرجاع البيانات بشكل مباشر (array) لسهولة الاستخدام
+        return { success: true, data: data };
         
     } catch (error) {
         console.error('❌ خطأ في جلب بيانات الفروع:', error);
@@ -241,6 +239,7 @@ async function getBranch(branchId) {
 
         if (data) {
             console.log('✅ تم جلب بيانات الفرع من Supabase:', branchId);
+            console.log('🔍 بيانات الفرع المُجلبة:', data); // إضافة تشخيص
             return { success: true, data: data };
         } else {
             console.log('⚠️ الفرع غير موجود في Supabase:', branchId);
