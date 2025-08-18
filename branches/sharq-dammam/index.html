@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحفيظ الشرقية - فرع غرب الدمام</title>
+    <title>تحفيظ الشرقية - فرع شرق الدمام</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/supabase-service.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -53,28 +54,28 @@
             </div>
             
             <!-- Branch Info -->
-            <p class="text-primary text-base sm:text-lg font-semibold px-2 branch-name">فرع غرب الدمام</p>
+            <p class="text-primary text-base sm:text-lg font-semibold px-2 branch-name">فرع شرق الدمام</p>
         </div>
 
         <!-- Social Icons Grid -->
         <div class="grid grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <!-- Twitter/X -->
-            <a href="https://x.com/Org2Qer" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]">
+            <a id="twitterLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
                 <i class="fab fa-twitter text-white text-3xl sm:text-5xl"></i>
             </a>
 
             <!-- WhatsApp -->
-            <a href="https://wa.me/966138360356" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]">
+            <a id="whatsappLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
                 <i class="fab fa-whatsapp text-white text-3xl sm:text-5xl"></i>
             </a>
 
             <!-- Instagram -->
-            <a href="https://www.instagram.com/org2qer/" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]">
+            <a id="instagramLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
                 <i class="fab fa-instagram text-white text-3xl sm:text-5xl"></i>
             </a>
 
             <!-- Google Maps -->
-            <a href="https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9?g_st=com.google.maps.preview.copy" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]">
+            <a id="locationLink" href="#" target="_blank" class="social-icon bg-custom rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-center aspect-square shadow-lg min-h-[80px] sm:min-h-[100px]" style="display: none;">
                 <i class="fas fa-map-marker-alt text-white text-3xl sm:text-5xl"></i>
             </a>
         </div>
@@ -104,44 +105,181 @@
     </div>
 
     <script>
-        // Enhanced click effects
-        document.querySelectorAll('.social-icon').forEach(icon => {
-            icon.addEventListener('click', function(e) {
-                // Don't prevent default - let the link work
+        // معرف الفرع الحالي
+        const BRANCH_ID = 'sharq-dammam';
+        
+        // تحميل بيانات الفرع من قاعدة البيانات
+        async function loadBranchData() {
+            try {
+                console.log('🔄 جلب بيانات الفرع:', BRANCH_ID);
                 
-                // Create pulse effect
-                this.style.transform = 'scale(0.9)';
-                this.style.transition = 'transform 0.1s ease';
+                // انتظار تحميل خدمة Supabase
+                let attempts = 0;
+                while (!window.supabaseService && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.supabaseService || !window.supabaseService.getBranch) {
+                    console.warn('⚠️ خدمة Supabase غير متوفرة، استخدام البيانات الافتراضية');
+                    loadDefaultData();
+                    return;
+                }
+                
+                // جلب بيانات الفرع
+                const branchData = await window.supabaseService.getBranch(BRANCH_ID);
+                console.log('📊 بيانات الفرع:', branchData);
+                
+                if (branchData.success && branchData.data) {
+                    updateBranchLinks(branchData.data);
+                } else {
+                    console.warn('⚠️ لم يتم العثور على بيانات الفرع، استخدام البيانات الافتراضية');
+                    loadDefaultData();
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في جلب بيانات الفرع:', error);
+                loadDefaultData();
+            }
+        }
+        
+        // تحديث الروابط بناءً على بيانات قاعدة البيانات
+        function updateBranchLinks(branchData) {
+            console.log('🔗 تحديث الروابط:', branchData);
+            
+            // Twitter
+            if (branchData.twitter) {
+                const twitterLink = document.getElementById('twitterLink');
+                twitterLink.href = branchData.twitter;
+                twitterLink.style.display = 'flex';
+            }
+            
+            // Instagram
+            if (branchData.instagram) {
+                const instagramLink = document.getElementById('instagramLink');
+                instagramLink.href = branchData.instagram;
+                instagramLink.style.display = 'flex';
+            }
+            
+            // WhatsApp
+            if (branchData.whatsapp) {
+                const whatsappLink = document.getElementById('whatsappLink');
+                whatsappLink.href = `https://wa.me/${branchData.whatsapp}`;
+                whatsappLink.style.display = 'flex';
+            }
+            
+            // Location
+            if (branchData.location) {
+                const locationLink = document.getElementById('locationLink');
+                locationLink.href = branchData.location;
+                locationLink.style.display = 'flex';
+            }
+            
+            console.log('✅ تم تحديث الروابط بنجاح');
+        }
+        
+        // تحميل البيانات الافتراضية (في حالة عدم توفر قاعدة البيانات)
+        function loadDefaultData() {
+            console.log('📝 تحميل البيانات الافتراضية');
+            
+            const defaultData = {
+                twitter: 'https://x.com/Org2Qer',
+                instagram: 'https://www.instagram.com/org2qer/',
+                whatsapp: '966138360356',
+                location: 'https://maps.app.goo.gl/cFQHa1b2y3uoDbGy9?g_st=com.google.maps.preview.copy'
+            };
+            
+            updateBranchLinks(defaultData);
+        }
+        
+        // Enhanced click effects
+        document.addEventListener('DOMContentLoaded', () => {
+            // تحميل بيانات الفرع
+            loadBranchData();
+            
+            // باقي الكود للتأثيرات والحركات
+            setupClickEffects();
+            setupAnimations();
+        });
+        
+        function setupClickEffects() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.social-icon')) {
+                    const icon = e.target.closest('.social-icon');
+                    
+                    // Create pulse effect
+                    icon.style.transform = 'scale(0.9)';
+                    icon.style.transition = 'transform 0.1s ease';
+                    
+                    setTimeout(() => {
+                        icon.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            icon.style.transform = '';
+                            icon.style.transition = 'all 0.3s ease';
+                        }, 100);
+                    }, 100);
+                    
+                    // Get icon class for identification
+                    const iconElement = icon.querySelector('i');
+                    let platform = 'منصة';
+                    
+                    if (iconElement.className.includes('twitter')) platform = 'تويتر';
+                    else if (iconElement.className.includes('whatsapp')) platform = 'واتساب';
+                    else if (iconElement.className.includes('instagram')) platform = 'إنستغرام';
+                    else if (iconElement.className.includes('map-marker')) platform = 'خرائط جوجل';
+                    
+                    console.log('تم النقر على:', platform);
+                }
+            });
+            
+            // Add hover effects
+            document.addEventListener('mouseenter', function(e) {
+                if (e.target.closest('.social-icon')) {
+                    const icon = e.target.closest('.social-icon');
+                    icon.style.transform = 'translateY(-8px) scale(1.1)';
+                }
+            }, true);
+            
+            document.addEventListener('mouseleave', function(e) {
+                if (e.target.closest('.social-icon')) {
+                    const icon = e.target.closest('.social-icon');
+                    icon.style.transform = '';
+                }
+            }, true);
+        }
+        
+        function setupAnimations() {
+            // Stagger animation on load
+            const icons = document.querySelectorAll('.social-icon');
+            icons.forEach((icon, index) => {
+                icon.style.opacity = '0';
+                icon.style.transform = 'translateY(30px) scale(0.8)';
+                icon.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                 
                 setTimeout(() => {
-                    this.style.transform = 'scale(1.1)';
+                    icon.style.opacity = '1';
+                    icon.style.transform = 'translateY(0) scale(1)';
+                }, index * 100 + 500);
+            });
+            
+            // Animate title
+            const title = document.querySelector('h1');
+            const subtitle = document.querySelector('h2');
+            const date = document.querySelector('p');
+            
+            [title, subtitle, date].forEach((el, index) => {
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-20px)';
+                    el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    
                     setTimeout(() => {
-                        this.style.transform = '';
-                        this.style.transition = 'all 0.3s ease';
-                    }, 100);
-                }, 100);
-                
-                // Get icon class for identification
-                const iconClass = this.querySelector('i').className;
-                let platform = 'منصة';
-                
-                if (iconClass.includes('twitter')) platform = 'تويتر';
-                else if (iconClass.includes('whatsapp')) platform = 'واتساب';
-                else if (iconClass.includes('instagram')) platform = 'إنستغرام';
-                else if (iconClass.includes('map-marker')) platform = 'خرائط جوجل';
-                
-                console.log('تم النقر على:', platform);
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, index * 200 + 200);
+                }
             });
-            
-            // Add hover sound effect (optional)
-            icon.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-8px) scale(1.1)';
-            });
-            
-            icon.addEventListener('mouseleave', function() {
-                this.style.transform = '';
-            });
-        });
+        }
 
         // Share functionality
         document.getElementById('shareBtn').addEventListener('click', async function() {

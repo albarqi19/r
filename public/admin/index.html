@@ -467,58 +467,78 @@
                 return '<p class="text-sm text-gray-600">تحديث بيانات الفرع</p>';
             }
             
-            let html = '<div class="space-y-2">';
+            // التحقق من وجود البيانات المحسنة (مع currentData و newData)
+            let newData, currentData;
+            if (requestData.newData && requestData.currentData) {
+                newData = requestData.newData;
+                currentData = requestData.currentData;
+            } else {
+                // التوافق مع النظام القديم
+                newData = requestData;
+                currentData = {};
+            }
+            
+            let html = '<div class="space-y-3">';
             
             // فحص الإحصائيات
-            if (requestData.totalStudents !== undefined || 
-                requestData.totalMemorizers !== undefined || 
-                requestData.newRegistrations !== undefined) {
-                html += '<div class="border-r-2 border-blue-400 pr-3">';
-                html += '<h5 class="text-sm font-medium text-blue-700 mb-1">📊 الإحصائيات:</h5>';
+            if (newData.totalStudents !== undefined || 
+                newData.totalMemorizers !== undefined || 
+                newData.newRegistrations !== undefined) {
+                html += '<div class="border-r-2 border-blue-400 pr-3 bg-blue-50 p-2 rounded">';
+                html += '<h5 class="text-sm font-medium text-blue-700 mb-2">📊 الإحصائيات:</h5>';
                 
-                if (requestData.totalStudents !== undefined) {
-                    html += `<p class="text-sm text-gray-600">• عدد الطلاب الحاليين: <span class="font-medium text-green-600">${requestData.totalStudents}</span></p>`;
+                if (newData.totalStudents !== undefined) {
+                    const oldValue = currentData.totalStudents || 0;
+                    const newValue = newData.totalStudents;
+                    html += `<div class="text-sm text-gray-600 mb-1">• عدد الطلاب الحاليين:</div>`;
+                    html += `<div class="mr-4 text-xs">من <span class="bg-gray-200 px-2 py-1 rounded">${oldValue}</span> إلى <span class="bg-green-200 px-2 py-1 rounded font-medium">${newValue}</span></div>`;
                 }
-                if (requestData.totalMemorizers !== undefined) {
-                    html += `<p class="text-sm text-gray-600">• عدد الحافظين: <span class="font-medium text-green-600">${requestData.totalMemorizers}</span></p>`;
+                if (newData.totalMemorizers !== undefined) {
+                    const oldValue = currentData.totalMemorizers || 0;
+                    const newValue = newData.totalMemorizers;
+                    html += `<div class="text-sm text-gray-600 mb-1 mt-2">• عدد الحافظين:</div>`;
+                    html += `<div class="mr-4 text-xs">من <span class="bg-gray-200 px-2 py-1 rounded">${oldValue}</span> إلى <span class="bg-green-200 px-2 py-1 rounded font-medium">${newValue}</span></div>`;
                 }
-                if (requestData.newRegistrations !== undefined) {
-                    html += `<p class="text-sm text-gray-600">• التسجيلات الجديدة: <span class="font-medium text-green-600">${requestData.newRegistrations}</span></p>`;
+                if (newData.newRegistrations !== undefined) {
+                    const oldValue = currentData.newRegistrations || 0;
+                    const newValue = newData.newRegistrations;
+                    html += `<div class="text-sm text-gray-600 mb-1 mt-2">• التسجيلات الجديدة:</div>`;
+                    html += `<div class="mr-4 text-xs">من <span class="bg-gray-200 px-2 py-1 rounded">${oldValue}</span> إلى <span class="bg-green-200 px-2 py-1 rounded font-medium">${newValue}</span></div>`;
                 }
                 html += '</div>';
             }
             
             // فحص الروابط الاجتماعية
-            if (requestData.twitter !== undefined || 
-                requestData.instagram !== undefined || 
-                requestData.whatsapp !== undefined || 
-                requestData.location !== undefined) {
-                html += '<div class="border-r-2 border-purple-400 pr-3 mt-3">';
-                html += '<h5 class="text-sm font-medium text-purple-700 mb-1">🔗 الروابط الاجتماعية:</h5>';
+            if (newData.twitter !== undefined || 
+                newData.instagram !== undefined || 
+                newData.whatsapp !== undefined || 
+                newData.location !== undefined) {
+                html += '<div class="border-r-2 border-purple-400 pr-3 bg-purple-50 p-2 rounded">';
+                html += '<h5 class="text-sm font-medium text-purple-700 mb-2">🔗 الروابط الاجتماعية:</h5>';
                 
-                if (requestData.twitter !== undefined) {
-                    const value = requestData.twitter ? 
-                        `<span class="font-medium text-blue-600">${requestData.twitter}</span>` : 
-                        '<span class="text-red-500 font-medium">إزالة الرابط</span>';
-                    html += `<p class="text-sm text-gray-600">• Twitter: ${value}</p>`;
+                if (newData.twitter !== undefined) {
+                    const oldValue = currentData.twitter || 'غير محدد';
+                    const newValue = newData.twitter || 'إزالة الرابط';
+                    html += `<div class="text-sm text-gray-600 mb-1">• Twitter:</div>`;
+                    html += `<div class="mr-4 text-xs break-all">من <span class="bg-gray-200 px-2 py-1 rounded">${oldValue}</span><br>إلى <span class="bg-blue-200 px-2 py-1 rounded font-medium">${newValue}</span></div>`;
                 }
-                if (requestData.instagram !== undefined) {
-                    const value = requestData.instagram ? 
-                        `<span class="font-medium text-pink-600">${requestData.instagram}</span>` : 
-                        '<span class="text-red-500 font-medium">إزالة الرابط</span>';
-                    html += `<p class="text-sm text-gray-600">• Instagram: ${value}</p>`;
+                if (newData.instagram !== undefined) {
+                    const oldValue = currentData.instagram || 'غير محدد';
+                    const newValue = newData.instagram || 'إزالة الرابط';
+                    html += `<div class="text-sm text-gray-600 mb-1 mt-2">• Instagram:</div>`;
+                    html += `<div class="mr-4 text-xs break-all">من <span class="bg-gray-200 px-2 py-1 rounded">${oldValue}</span><br>إلى <span class="bg-pink-200 px-2 py-1 rounded font-medium">${newValue}</span></div>`;
                 }
-                if (requestData.whatsapp !== undefined) {
-                    const value = requestData.whatsapp ? 
-                        `<span class="font-medium text-green-600">${requestData.whatsapp}</span>` : 
-                        '<span class="text-red-500 font-medium">إزالة الرقم</span>';
-                    html += `<p class="text-sm text-gray-600">• WhatsApp: ${value}</p>`;
+                if (newData.whatsapp !== undefined) {
+                    const oldValue = currentData.whatsapp || 'غير محدد';
+                    const newValue = newData.whatsapp || 'إزالة الرقم';
+                    html += `<div class="text-sm text-gray-600 mb-1 mt-2">• WhatsApp:</div>`;
+                    html += `<div class="mr-4 text-xs break-all">من <span class="bg-gray-200 px-2 py-1 rounded">${oldValue}</span><br>إلى <span class="bg-green-200 px-2 py-1 rounded font-medium">${newValue}</span></div>`;
                 }
-                if (requestData.location !== undefined) {
-                    const value = requestData.location ? 
-                        `<span class="font-medium text-red-600">${requestData.location}</span>` : 
-                        '<span class="text-red-500 font-medium">إزالة الموقع</span>';
-                    html += `<p class="text-sm text-gray-600">• الموقع: ${value}</p>`;
+                if (newData.location !== undefined) {
+                    const oldValue = currentData.location || 'غير محدد';
+                    const newValue = newData.location || 'إزالة الموقع';
+                    html += `<div class="text-sm text-gray-600 mb-1 mt-2">• الموقع:</div>`;
+                    html += `<div class="mr-4 text-xs break-all">من <span class="bg-gray-200 px-2 py-1 rounded">${oldValue}</span><br>إلى <span class="bg-red-200 px-2 py-1 rounded font-medium">${newValue}</span></div>`;
                 }
                 html += '</div>';
             }

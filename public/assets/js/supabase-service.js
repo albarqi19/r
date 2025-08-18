@@ -320,16 +320,48 @@ async function createUpdateRequest(branchId, requestData) {
             throw new Error('Supabase client غير متاح');
         }
 
+        // جلب البيانات الحالية للمقارنة
+        let currentData = {};
+        try {
+            const { data: branchData, error: branchError } = await supabaseClient
+                .from('branches')
+                .select('*')
+                .eq('id', branchId)
+                .single();
+            
+            if (!branchError && branchData) {
+                currentData = branchData;
+                console.log('📊 البيانات الحالية:', currentData);
+            }
+        } catch (err) {
+            console.warn('⚠️ لم يتم العثور على البيانات الحالية:', err);
+        }
+
+        // تحضير بيانات الطلب مع المقارنة
+        const enhancedRequestData = {
+            newData: requestData,
+            currentData: {
+                twitter: currentData.twitter || '',
+                instagram: currentData.instagram || '',
+                whatsapp: currentData.whatsapp || '',
+                location: currentData.location || '',
+                totalStudents: currentData.totalStudents || 0,
+                totalMemorizers: currentData.totalMemorizers || 0,
+                newRegistrations: currentData.newRegistrations || 0
+            },
+            timestamp: new Date().toISOString()
+        };
+
         // إنشاء طلب تحديث في جدول update_requests
         const request = {
             branch_id: branchId,
-            request_data: JSON.stringify(requestData), // تحويل إلى JSON string
+            request_data: JSON.stringify(enhancedRequestData), // تحويل إلى JSON string
             status: 'pending',
             requested_at: new Date().toISOString()
             // requested_by سيبقى null لأنه اختياري
         };
 
-        console.log('📝 بيانات الطلب:', request);
+        console.log('📝 بيانات الطلب المحسنة:', request);
 
         const { data, error } = await supabaseClient
             .from('update_requests')
@@ -370,11 +402,20 @@ async function approveUpdateRequest(requestId) {
         console.log('📋 بيانات الطلب:', requestData);
 
         // تحليل البيانات المطلوبة
-        const updatedData = typeof requestData.request_data === 'string' 
+        let updatedData;
+        const parsedData = typeof requestData.request_data === 'string' 
             ? JSON.parse(requestData.request_data) 
             : requestData.request_data;
-            
-        console.log('📝 البيانات المحللة:', updatedData);
+        
+        // التحقق من البنية المحسنة (مع newData و currentData)
+        if (parsedData.newData) {
+            updatedData = parsedData.newData;
+            console.log('📝 استخدام البيانات الجديدة المحسنة:', updatedData);
+        } else {
+            // التوافق مع النظام القديم
+            updatedData = parsedData;
+            console.log('📝 استخدام البيانات التقليدية:', updatedData);
+        }
 
         // تطبيق التحديث على الفرع
         console.log('🔄 تطبيق التحديث على الفرع:', requestData.branch_id);
