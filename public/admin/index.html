@@ -610,36 +610,21 @@
 
                     console.log('🚀 المدير: بدء عملية الموافقة...', request);
 
-                    // استخدام requestData بدلاً من changes
-                    const updateData = request.requestData || request.changes;
-                    
-                    if (!updateData || typeof updateData !== 'object') {
-                        throw new Error('بيانات التحديث غير صالحة');
+                    // التحقق من وجود supabaseService
+                    if (!window.supabaseService) {
+                        throw new Error('Supabase Service غير متوفر');
                     }
 
-                    console.log('📝 بيانات التحديث:', updateData);
+                    // التحقق من وجود دالة الموافقة
+                    if (typeof window.supabaseService.approveUpdateRequest !== 'function') {
+                        throw new Error('دالة الموافقة غير متوفرة في Supabase Service');
+                    }
 
-                    // استخدام supabaseService للتحديث
-                    if (window.supabaseService && typeof window.supabaseService.approveUpdateRequest === 'function') {
-                        console.log('🔥 استخدام supabaseService للموافقة...');
-                        const result = await window.supabaseService.approveUpdateRequest(this.currentRequestId);
-                        
-                        if (!result.success) {
-                            throw new Error(result.error || 'فشل في الموافقة');
-                        }
-                    } else {
-                        console.log('🔄 استخدام Firebase مباشرة...');
-                        
-                        // تحديث بيانات الفرع مباشرة
-                        const branchRef = firebase.database().ref(`branches/${request.branchId}`);
-                        await branchRef.update(updateData);
-
-                        // تحديث حالة الطلب
-                        await firebase.database().ref(`updateRequests/${this.currentRequestId}`).update({
-                            status: 'approved',
-                            approvedBy: this.currentUser?.uid || 'admin',
-                            approvedAt: firebase.database.ServerValue.TIMESTAMP
-                        });
+                    console.log('🔥 استخدام supabaseService للموافقة...');
+                    const result = await window.supabaseService.approveUpdateRequest(this.currentRequestId);
+                    
+                    if (!result || !result.success) {
+                        throw new Error(result?.error || 'فشل في الموافقة على الطلب');
                     }
 
                     console.log('✅ تمت الموافقة على الطلب بنجاح');
@@ -661,12 +646,22 @@
                 if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) return;
 
                 try {
-                    // تحديث حالة الطلب
-                    await firebase.database().ref(`updateRequests/${requestId}`).update({
-                        status: 'rejected',
-                        rejectedBy: this.currentUser.uid,
-                        rejectedAt: firebase.database.ServerValue.TIMESTAMP
-                    });
+                    // التحقق من وجود supabaseService
+                    if (!window.supabaseService) {
+                        throw new Error('Supabase Service غير متوفر');
+                    }
+
+                    // التحقق من وجود دالة الرفض
+                    if (typeof window.supabaseService.rejectUpdateRequest !== 'function') {
+                        throw new Error('دالة الرفض غير متوفرة في Supabase Service');
+                    }
+
+                    console.log('🚀 رفض الطلب:', requestId);
+                    const result = await window.supabaseService.rejectUpdateRequest(requestId, 'تم الرفض من المدير');
+                    
+                    if (!result || !result.success) {
+                        throw new Error(result?.error || 'فشل في رفض الطلب');
+                    }
 
                     this.showNotification('تم رفض الطلب', 'info');
                     
@@ -675,7 +670,7 @@
 
                 } catch (error) {
                     console.error('خطأ في رفض الطلب:', error);
-                    this.showNotification('خطأ في رفض الطلب', 'error');
+                    this.showNotification('خطأ في رفض الطلب: ' + error.message, 'error');
                 }
             }
 

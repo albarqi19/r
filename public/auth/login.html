@@ -340,17 +340,24 @@
                     branchId: user.branchId,
                     branchName: user.branchName,
                     region: user.region,
-                    role: user.role || 'branch_manager',
+                    role: user.role, // استخدام الدور الأصلي بدلاً من branch_manager
                     phone: user.phone,
                     loginTime: new Date().getTime(),
                     timestamp: user.loginTime
                 };
 
                 localStorage.setItem('userSession', JSON.stringify(userSession));
-                localStorage.setItem('currentBranch', user.branchId);
-                localStorage.setItem('userToken', 'branch_' + user.branchId + '_' + Date.now());
                 
-                console.log('✅ تم حفظ جلسة الفرع:', userSession);
+                // حفظ معرف الفرع فقط لمدراء الفروع
+                if (user.branchId) {
+                    localStorage.setItem('currentBranch', user.branchId);
+                    localStorage.setItem('userToken', 'branch_' + user.branchId + '_' + Date.now());
+                } else {
+                    // للمدير العام
+                    localStorage.setItem('userToken', 'admin_' + Date.now());
+                }
+                
+                console.log('✅ تم حفظ جلسة المستخدم:', userSession);
             }
 
             redirectUser(user) {

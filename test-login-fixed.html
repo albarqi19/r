@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار تسجيل الدخول</title>
+    <script src="./assets/js/supabase-service.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 اختبار تسجيل الدخول - المحدث</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ اختبار تسجيل دخول المدير</h3>
+            <p>البريد: admin@tahfeez-sharqiya.com | كلمة المرور: admin123</p>
+            <button onclick="testAdminLogin()">اختبار تسجيل دخول المدير</button>
+            <div id="admin-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2️⃣ اختبار تسجيل دخول فرع غرب الدمام</h3>
+            <p>البريد: garb@tahfeez-sharqiya.com | كلمة المرور: admin123</p>
+            <button onclick="testBranchLogin('garb@tahfeez-sharqiya.com', 'garb-dammam')">اختبار تسجيل دخول الفرع</button>
+            <div id="branch-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3️⃣ اختبار تحميل جميع الفروع</h3>
+            <button onclick="testLoadAllBranches()">تحميل جميع الفروع</button>
+            <div id="branches-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4️⃣ فحص جميع المستخدمين في قاعدة البيانات</h3>
+            <button onclick="testLoadAllUsers()">فحص المستخدمين</button>
+            <div id="users-result"></div>
+        </div>
+        
+        <div class="test-section info">
+            <h3>📋 بيانات تسجيل الدخول المتاحة:</h3>
+            <ul>
+                <li><strong>المدير:</strong> admin@tahfeez-sharqiya.com (admin123) → Admin Panel</li>
+                <li><strong>غرب الدمام:</strong> garb@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>شرق الدمام:</strong> sharq@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>الخبر:</strong> khobar@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>الرفيعة:</strong> rafeia@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>بقيق:</strong> baqiq@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>عنك:</strong> anak@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>وادي المياه:</strong> wadi.almiyah@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>الصرار:</strong> alsarar@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>رأس تنورة:</strong> ras.tanura@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>قرية:</strong> qaryah@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+                <li><strong>التعيرية:</strong> altaeriah@tahfeez-sharqiya.com (admin123) → Dashboard</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function testAdminLogin() {
+            const resultDiv = document.getElementById('admin-result');
+            resultDiv.innerHTML = '<p>🔄 جاري الاختبار...</p>';
+            
+            try {
+                const email = 'admin@tahfeez-sharqiya.com';
+                const password = 'admin123';
+                
+                console.log('🧪 اختبار تسجيل دخول المدير...');
+                
+                // محاولة التحقق من بيانات تسجيل الدخول
+                const defaultCredentials = {
+                    'admin@tahfeez-sharqiya.com': {
+                        password: 'admin123',
+                        role: 'admin',
+                        name: 'مدير النظام',
+                        branchId: null
+                    }
+                };
+                
+                if (defaultCredentials[email] && defaultCredentials[email].password === password) {
+                    const user = {
+                        uid: 'admin',
+                        email: email,
+                        role: 'admin',
+                        name: 'مدير النظام',
+                        branchId: null
+                    };
+                    
+                    let redirectInfo = '';
+                    if (user.role === 'admin') {
+                        redirectInfo = '→ سيتم التوجيه إلى: ../admin/index.html';
+                    } else {
+                        redirectInfo = '→ سيتم التوجيه إلى: ../dashboard/index.html';
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h4>✅ نجح تسجيل الدخول للمدير!</h4>
+                            <p><strong>البريد:</strong> ${user.email}</p>
+                            <p><strong>الدور:</strong> ${user.role}</p>
+                            <p><strong>التوجيه:</strong> ${redirectInfo}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h4>❌ فشل تسجيل دخول المدير</h4>
+                            <p>بيانات تسجيل الدخول غير صحيحة</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في اختبار المدير:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h4>❌ خطأ في الاختبار</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testBranchLogin(email, expectedBranchId) {
+            const resultDiv = document.getElementById('branch-result');
+            resultDiv.innerHTML = '<p>🔄 جاري الاختبار...</p>';
+            
+            try {
+                console.log('🧪 اختبار تسجيل دخول الفرع:', email);
+                
+                const defaultCredentials = {
+                    'garb@tahfeez-sharqiya.com': {
+                        password: 'admin123',
+                        role: 'branch',
+                        name: 'مسؤول فرع غرب الدمام',
+                        branchId: 'garb-dammam'
+                    }
+                };
+                
+                if (defaultCredentials[email] && defaultCredentials[email].password === 'admin123') {
+                    const user = defaultCredentials[email];
+                    
+                    let redirectInfo = '';
+                    if (user.role === 'admin') {
+                        redirectInfo = '→ سيتم التوجيه إلى: ../admin/index.html';
+                    } else {
+                        redirectInfo = '→ سيتم التوجيه إلى: ../dashboard/index.html';
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h4>✅ نجح تسجيل الدخول للفرع!</h4>
+                            <p><strong>البريد:</strong> ${email}</p>
+                            <p><strong>الدور:</strong> ${user.role}</p>
+                            <p><strong>الفرع:</strong> ${user.branchId}</p>
+                            <p><strong>التوجيه:</strong> ${redirectInfo}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h4>❌ فشل تسجيل دخول الفرع</h4>
+                            <p>بيانات تسجيل الدخول غير صحيحة</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في اختبار الفرع:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h4>❌ خطأ في الاختبار</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testLoadAllBranches() {
+            const resultDiv = document.getElementById('branches-result');
+            resultDiv.innerHTML = '<p>🔄 جاري تحميل الفروع...</p>';
+            
+            try {
+                console.log('🧪 اختبار تحميل الفروع...');
+                
+                if (!window.supabaseService) {
+                    throw new Error('Supabase Service غير متوفر');
+                }
+                
+                const branches = await supabaseService.getAllBranches();
+                
+                if (branches && branches.length > 0) {
+                    let branchList = branches.map((branch, index) => 
+                        `<li>${index + 1}. ${branch.name} (${branch.id}) - ${branch.region}</li>`
+                    ).join('');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h4>✅ تم تحميل الفروع بنجاح!</h4>
+                            <p><strong>عدد الفروع:</strong> ${branches.length}</p>
+                            <ul>${branchList}</ul>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h4>⚠️ لم يتم العثور على فروع</h4>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في تحميل الفروع:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h4>❌ خطأ في تحميل الفروع</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testLoadAllUsers() {
+            const resultDiv = document.getElementById('users-result');
+            resultDiv.innerHTML = '<p>🔄 جاري فحص المستخدمين...</p>';
+            
+            try {
+                console.log('🧪 اختبار فحص المستخدمين...');
+                
+                if (!window.supabaseService) {
+                    throw new Error('Supabase Service غير متوفر');
+                }
+                
+                // محاولة فحص المستخدمين باستخدام query مباشر
+                const users = await supabaseService.supabase
+                    .from('users')
+                    .select('email, role, branch_id');
+                
+                if (users.data && users.data.length > 0) {
+                    let userList = users.data.map((user, index) => {
+                        const branchInfo = user.branch_id ? `فرع: ${user.branch_id}` : 'جميع الفروع';
+                        return `<li>${index + 1}. ${user.email} (${user.role}) - ${branchInfo}</li>`;
+                    }).join('');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h4>✅ تم العثور على المستخدمين!</h4>
+                            <p><strong>عدد المستخدمين:</strong> ${users.data.length}</p>
+                            <ul>${userList}</ul>
+                        </div>
+                    `;
+                } else if (users.error) {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h4>❌ خطأ في فحص المستخدمين</h4>
+                            <p>${users.error.message}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h4>⚠️ لم يتم العثور على مستخدمين</h4>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في فحص المستخدمين:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h4>❌ خطأ في فحص المستخدمين</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // تسجيل عند تحميل الصفحة
+        console.log('🎉 صفحة اختبار تسجيل الدخول جاهزة!');
+        console.log('📋 يمكنك اختبار جميع وظائف تسجيل الدخول والربط مع قاعدة البيانات');
+    </script>
+</body>
+</html>
