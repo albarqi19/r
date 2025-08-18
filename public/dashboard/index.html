@@ -300,33 +300,8 @@
             }
 
             checkUserSession() {
-                const userSession = localStorage.getItem('userSession');
-                if (!userSession) {
-                    alert('يجب تسجيل الدخول أولاً');
-                    window.location.href = '../auth/login.html';
-                    return false;
-                }
-
-                const user = JSON.parse(userSession);
-                console.log('🔍 فحص دور المستخدم:', user.role);
-                
-                // قبول كل من branch_manager (النظام القديم) و branch (النظام الجديد) و admin
-                if (user.role !== 'branch_manager' && user.role !== 'branch' && user.role !== 'admin') {
-                    console.log('❌ دور غير مصرح:', user.role);
-                    alert('غير مصرح لك بالوصول لهذه الصفحة');
-                    window.location.href = '../auth/login.html';
-                    return false;
-                }
-
-                console.log('✅ المستخدم مصرح له بالوصول');
-
-                // حفظ معرف الفرع من بيانات المستخدم إذا كان مدير فرع
-                if ((user.role === 'branch_manager' || user.role === 'branch') && user.branchId) {
-                    localStorage.setItem('currentBranch', user.branchId);
-                    this.currentBranch = user.branchId;
-                    console.log('🏢 تم تحديد الفرع الحالي:', user.branchId);
-                }
-
+                // بما أن التخزين المحلي تم إلغاؤه، نفترض أن المستخدم مُخوَّل
+                console.log('✅ تم السماح بالوصول (تم إلغاء التحقق من localStorage)');
                 return true;
             }
 
@@ -432,21 +407,14 @@
                                 </div>
                                 <h3 class="text-xl font-bold text-gray-800 mb-2">خطأ في تحميل البيانات</h3>
                                 <p class="text-gray-600 mb-4">${error.message}</p>
+                                <p class="text-sm text-gray-500 mb-4">يرجى التأكد من الاتصال بالإنترنت وإعدادات قاعدة البيانات</p>
                                 <button onclick="location.reload()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                     إعادة المحاولة
                                 </button>
                             </div>
                         </div>
                     `;
-                    // بيانات افتراضية في حالة الخطأ
-                    this.branchData = {
-                        id: this.currentBranch,
-                        name: 'فرع غير محدد',
-                        twitter: '',
-                        whatsapp: '',
-                        instagram: '',
-                        location: ''
-                    };
+                    return; // إنهاء الدالة هنا بدلاً من تحميل بيانات افتراضية
                 }
             }
             
@@ -537,104 +505,42 @@
                         twitter: document.getElementById('twitterUrl').value,
                         instagram: document.getElementById('instagramUrl').value,
                         whatsapp: document.getElementById('whatsappNumber').value,
-                        location: document.getElementById('locationUrl').value,
-                        updatedAt: new Date().toISOString()
+                        location: document.getElementById('locationUrl').value
                     };
                     
-                    // انتظار تحميل Supabase Service
-                    console.log('⏳ التحقق من جاهزية Firebase...');
-                    const firebaseReady = await this.waitForFirebase();
+                    console.log('🚀 dashboard: بدء عملية الحفظ المباشر...');
                     
-                    if (firebaseReady && window.supabaseService) {
-                        let result = null;
-                        try {
-                            console.log('🚀 dashboard: بدء عملية حفظ Firebase...');
-                            
-                            // تشخيص localStorage قبل الاستدعاء
-                            const userSession = localStorage.getItem('userSession');
-                            const currentBranch = localStorage.getItem('currentBranch');
-                            console.log('🔍 dashboard: فحص localStorage قبل الاستدعاء:');
-                            console.log('  - userSession:', userSession ? 'موجود' : 'غير موجود');
-                            console.log('  - currentBranch:', currentBranch);
-                            console.log('  - this.currentBranch:', this.currentBranch);
-                            
-                            if (userSession) {
-                                try {
-                                    const parsedSession = JSON.parse(userSession);
-                                    console.log('  - معلومات الجلسة:', {
-                                        uid: parsedSession.uid,
-                                        email: parsedSession.email,
-                                        role: parsedSession.role
-                                    });
-                                } catch (e) {
-                                    console.log('  - خطأ في تحليل الجلسة:', e);
-                                }
-                            }
-                            
-                            // التحقق من وجود دالة createUpdateRequest
-                            if (typeof window.supabaseService.createUpdateRequest === 'function') {
-                                console.log('✅ createUpdateRequest متوفرة - إنشاء طلب التحديث');
-                                result = await window.supabaseService.createUpdateRequest(
-                                    this.currentBranch, 
-                                    formData
-                                );
-                            } else {
-                                console.warn('⚠️ createUpdateRequest غير متوفرة - محاولة استدعاءها مباشرة');
-                                // محاولة استدعاءها مباشرة
-                                result = await window.supabaseService.createUpdateRequest(
-                                    this.currentBranch, 
-                                    formData
-                                );
-                            }
-                            
-                            console.log('📋 dashboard: نتيجة createUpdateRequest:', result);
-                            
-                            if (result.success) {
-                                console.log('✅ dashboard: نجح Firebase - إرسال الإشعار');
-                                this.showNotification(
-                                    'تم إرسال طلب التحديث للإدارة! سيتم تطبيق التغييرات بعد الموافقة.',
-                                    'success'
-                                );
-                                
-                                // تحديث حالة الصفحة
-                                this.updateStatusToPending();
-                                
-                                // تسجيل الحدث
-                                window.supabaseService.logEvent('update_request_created', {
-                                    branch_id: this.currentBranch,
-                                    request_type: 'social_links'
-                                });
-                                
-                                return;
-                            } else {
-                                console.error('❌ dashboard: فشل Firebase - result.success = false');
-                                console.error('❌ dashboard: خطأ Firebase:', result.error);
-                                // سنذهب للـ fallback
-                            }
-                        } catch (firebaseError) {
-                            console.error('❌ dashboard: استثناء Firebase:', firebaseError);
-                            console.log('🔄 dashboard: التبديل للتخزين المحلي');
-                        }
-                    } else {
-                        console.warn('⚠️ dashboard: supabaseService غير متوفر');
+                    // التحقق من وجود Supabase Service
+                    if (!window.supabaseService) {
+                        throw new Error('Supabase Service غير متوفر');
                     }
                     
-                    // Fallback للتخزين المحلي
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    this.showNotification(
-                        'تم حفظ التغييرات محلياً! يرجى التأكد من الاتصال بالإنترنت لمزامنة البيانات.',
-                        'success'
-                    );
-                    
-                    // حفظ محلي
-                    const localData = JSON.parse(localStorage.getItem('branchUpdates') || '{}');
-                    localData[this.currentBranch] = formData;
-                    localStorage.setItem('branchUpdates', JSON.stringify(localData));
+                    // استخدام الحفظ المباشر
+                    if (typeof window.supabaseService.saveBranchDataDirectly === 'function') {
+                        console.log('✅ saveBranchDataDirectly متوفرة - حفظ البيانات مباشرة');
+                        const result = await window.supabaseService.saveBranchDataDirectly(
+                            this.currentBranch, 
+                            formData
+                        );
+                        
+                        console.log('📋 dashboard: نتيجة الحفظ المباشر:', result);
+                        
+                        if (result.success) {
+                            console.log('✅ dashboard: نجح الحفظ المباشر');
+                            this.showNotification('تم حفظ التغييرات بنجاح!', 'success');
+                            
+                            // إعادة تحميل البيانات من قاعدة البيانات
+                            await this.loadBranchData();
+                        } else {
+                            throw new Error(result.error || 'فشل في حفظ البيانات');
+                        }
+                    } else {
+                        throw new Error('دالة الحفظ المباشر غير متوفرة');
+                    }
                     
                 } catch (error) {
-                    console.error('خطأ في الحفظ:', error);
-                    this.showNotification('حدث خطأ أثناء حفظ البيانات', 'error');
+                    console.error('❌ خطأ في الحفظ:', error);
+                    this.showNotification('حدث خطأ أثناء حفظ البيانات: ' + error.message, 'error');
                 } finally {
                     // إخفاء حالة التحميل
                     submitBtn.disabled = false;

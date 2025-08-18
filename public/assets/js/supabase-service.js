@@ -45,7 +45,7 @@ window.supabaseService = {
     getAllBranches: null,
     getBranch: null,
     updateBranch: null,
-    createUpdateRequest: null,
+    saveBranchDataDirectly: null,
     approveUpdateRequest: null,
     rejectUpdateRequest: null,
     getPendingRequests: null,
@@ -262,66 +262,34 @@ async function updateBranch(branchId, updateData) {
     }
 }
 
-// إنشاء طلب تحديث في Supabase
-async function createUpdateRequest(branchId, requestData) {
+// حفظ بيانات الفرع مباشرة في Supabase (بدون طلبات موافقة)
+async function saveBranchDataDirectly(branchId, updateData) {
     try {
-        console.log('🔍 createUpdateRequest: بدء التحقق من الجلسة...');
-        
-        // التحقق من جلسة المستخدم في localStorage بدلاً من Supabase Auth
-        const userSession = localStorage.getItem('userSession');
-        console.log('🔍 userSession من localStorage:', userSession ? 'موجود' : 'غير موجود');
-        
-        if (!userSession) {
-            console.log('❌ userSession غير موجود في localStorage');
-            throw new Error('يجب تسجيل الدخول أولاً');
-        }
+        console.log('� بدء حفظ بيانات الفرع مباشرة...', branchId, updateData);
 
-        let userInfo;
-        try {
-            userInfo = JSON.parse(userSession);
-            console.log('✅ تم تحليل userSession:', {
-                uid: userInfo.uid,
-                email: userInfo.email,
-                role: userInfo.role,
-                branchId: userInfo.branchId
-            });
-        } catch (e) {
-            console.log('❌ خطأ في تحليل userSession:', e);
-            throw new Error('جلسة المستخدم غير صالحة');
-        }
-
-        // التحقق من صحة البيانات
-        if (!userInfo.uid || !userInfo.email) {
-            throw new Error('بيانات المستخدم غير مكتملة');
-        }
-
-        console.log('🔍 معلومات المستخدم للطلب:', {
-            uid: userInfo.uid,
-            email: userInfo.email,
-            role: userInfo.role,
-            branchId: branchId
-        });
-
-        const request = {
-            branch_id: branchId,
-            request_data: requestData,
-            status: 'pending',
-            requested_by: userInfo.uid, // استخدام uid من localStorage
-            requested_at: new Date().toISOString()
-        };
-
+        // حفظ البيانات مباشرة في جدول branches
         const { data, error } = await supabaseClient
-            .from('update_requests')
-            .insert([request])
+            .from('branches')
+            .update({
+                twitter: updateData.twitter || null,
+                whatsapp: updateData.whatsapp || null,
+                instagram: updateData.instagram || null,
+                location: updateData.location || null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', branchId)
             .select();
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ خطأ في حفظ البيانات:', error);
+            throw error;
+        }
         
-        console.log('✅ تم إنشاء طلب التحديث في Supabase:', data[0].id);
-        return { success: true, requestId: data[0].id };
+        console.log('✅ تم حفظ بيانات الفرع مباشرة في Supabase:', data);
+        return { success: true, data: data[0] };
         
     } catch (error) {
-        console.error('❌ خطأ في إنشاء طلب التحديث:', error);
+        console.error('❌ خطأ في حفظ بيانات الفرع:', error);
         return { success: false, error: error.message };
     }
 }
@@ -694,7 +662,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.supabaseService.getAllBranches = getAllBranches;
             window.supabaseService.getBranch = getBranch;
             window.supabaseService.updateBranch = updateBranch;
-            window.supabaseService.createUpdateRequest = createUpdateRequest;
+            window.supabaseService.saveBranchDataDirectly = saveBranchDataDirectly;
             window.supabaseService.approveUpdateRequest = approveUpdateRequest;
             window.supabaseService.rejectUpdateRequest = rejectUpdateRequest;
             window.supabaseService.getPendingRequests = getPendingRequests;
