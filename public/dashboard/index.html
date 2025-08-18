@@ -253,11 +253,11 @@
 
     <!-- Scripts -->
     <script>
-        // Fallback للتأكد من وجود firebaseService
-        console.log('🔧 Dashboard: Fallback check for firebaseService...');
-        if (!window.firebaseService) {
-            console.log('⚠️ Dashboard: إنشاء firebaseService fallback');
-            window.firebaseService = {
+        // Fallback للتأكد من وجود supabaseService
+        console.log('🔧 Dashboard: Fallback check for supabaseService...');
+        if (!window.supabaseService) {
+            console.log('⚠️ Dashboard: إنشاء supabaseService fallback');
+            window.supabaseService = {
                 checkSession: function() {
                     console.log('🔍 Fallback checkSession');
                     return { hasSession: false, user: null };
@@ -269,13 +269,13 @@
             };
         }
     </script>
-    <script src="../assets/js/firebase-service.js"></script>
+    <script src="../assets/js/supabase-service.js"></script>
     <script src="../assets/js/app.js"></script>
     <script>
         class DashboardManager {
             constructor() {
                 this.currentBranch = this.getBranchFromPath();
-                console.log('🎯 DashboardManager constructor - Firebase Service متوفر؟', !!window.firebaseService);
+                console.log('🎯 DashboardManager constructor - Supabase Service متوفر؟', !!window.supabaseService);
                 // بدء التهيئة فوراً
                 this.init();
             }
@@ -376,22 +376,40 @@
                 console.log('📥 تحميل بيانات الفرع:', this.currentBranch);
                 
                 try {
-                    // محاولة جلب البيانات من Firebase
-                    if (window.firebaseService && typeof window.firebaseService.getBranch === 'function') {
-                        console.log('🔥 جلب البيانات من Firebase...');
-                        const result = await window.firebaseService.getBranch(this.currentBranch);
+                    // محاولة جلب البيانات من Supabase
+                    if (window.supabaseService && typeof window.supabaseService.getAllBranches === 'function') {
+                        console.log('🔥 جلب جميع بيانات الفروع من Supabase...');
+                        const result = await window.supabaseService.getAllBranches();
                         
                         if (result.success && result.data) {
-                            console.log('✅ تم جلب البيانات من Firebase:', result.data);
-                            this.branchData = result.data;
-                            return;
+                            console.log('✅ تم جلب جميع البيانات من Supabase:', Object.keys(result.data).length, 'فرع');
+                            
+                            // البحث عن الفرع المحدد
+                            const branchData = result.data[this.currentBranch];
+                            if (branchData) {
+                                console.log('✅ تم العثور على بيانات الفرع:', branchData.name);
+                                this.branchData = branchData;
+                                return;
+                            } else {
+                                console.error('❌ لم يتم العثور على الفرع:', this.currentBranch);
+                                // استخدام أول فرع متاح كبديل
+                                const firstBranch = Object.keys(result.data)[0];
+                                if (firstBranch) {
+                                    console.log('🔄 استخدام الفرع الأول كبديل:', firstBranch);
+                                    this.currentBranch = firstBranch;
+                                    this.branchData = result.data[firstBranch];
+                                    return;
+                                }
+                                throw new Error('لا توجد بيانات فروع');
+                            }
                         } else {
-                            console.error('❌ فشل في جلب البيانات من Firebase:', result.error);
+                            console.error('❌ فشل في جلب البيانات من Supabase:', result.error);
                             throw new Error('فشل في تحميل البيانات: ' + result.error);
                         }
                     } else {
-                        console.error('❌ Firebase Service غير متوفر');
-                        throw new Error('Firebase Service غير متوفر');
+                        console.error('❌ Supabase Service غير متوفر أو getAllBranches غير موجود');
+                        console.log('🔍 المتوفر:', window.supabaseService ? Object.keys(window.supabaseService) : 'لا شيء');
+                        throw new Error('Supabase Service غير متوفر');
                     }
                     
                 } catch (error) {
@@ -443,28 +461,28 @@
                 console.log('🔍 waitForFirebase: بدء الفحص...');
                 
                 // التحقق الفوري
-                if (window.firebaseService) {
-                    if (typeof window.firebaseService.createUpdateRequest === 'function') {
-                        console.log('✅ Firebase Service جاهز مسبقاً - createUpdateRequest متوفر');
+                if (window.supabaseService) {
+                    if (typeof window.supabaseService.createUpdateRequest === 'function') {
+                        console.log('✅ Supabase Service جاهز مسبقاً - createUpdateRequest متوفر');
                         return true;
-                    } else if (window.firebaseService.checkSession) {
-                        console.log('⚡ Firebase Service موجود لكن الدوال لم تحدث بعد - سنحاول المتابعة');
+                    } else if (window.supabaseService.checkSession) {
+                        console.log('⚡ Supabase Service موجود لكن الدوال لم تحدث بعد - سنحاول المتابعة');
                         return true;
                     }
                 }
                 
-                console.log('🔍 window.firebaseService موجود؟', !!window.firebaseService);
-                if (window.firebaseService) {
-                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.firebaseService.createUpdateRequest);
+                console.log('🔍 window.supabaseService موجود؟', !!window.supabaseService);
+                if (window.supabaseService) {
+                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.supabaseService.createUpdateRequest);
                 }
                 
                 return new Promise((resolve) => {
                     const startTime = Date.now();
                     
                     const checkFirebase = () => {
-                        if (window.firebaseService) {
-                            if (typeof window.firebaseService.createUpdateRequest === 'function') {
-                                console.log('✅ Firebase Service جاهز للاستخدام - createUpdateRequest متوفر');
+                        if (window.supabaseService) {
+                            if (typeof window.supabaseService.createUpdateRequest === 'function') {
+                                console.log('✅ Supabase Service جاهز للاستخدام - createUpdateRequest متوفر');
                                 resolve(true);
                                 return;
                             } else {
@@ -478,7 +496,7 @@
                         }
                         
                         if (Date.now() - startTime > maxWaitTime) {
-                            console.error('❌ انتهت مهلة انتظار Firebase Service');
+                            console.error('❌ انتهت مهلة انتظار Supabase Service');
                             resolve(false);
                             return;
                         }
@@ -516,26 +534,26 @@
                         updatedAt: new Date().toISOString()
                     };
                     
-                    // انتظار تحميل Firebase Service
+                    // انتظار تحميل Supabase Service
                     console.log('⏳ التحقق من جاهزية Firebase...');
                     const firebaseReady = await this.waitForFirebase();
                     
-                    if (firebaseReady && window.firebaseService) {
+                    if (firebaseReady && window.supabaseService) {
                         let result = null;
                         try {
                             console.log('🚀 dashboard: بدء عملية حفظ Firebase...');
                             
                             // التحقق من وجود دالة createUpdateRequest
-                            if (typeof window.firebaseService.createUpdateRequest === 'function') {
+                            if (typeof window.supabaseService.createUpdateRequest === 'function') {
                                 console.log('✅ createUpdateRequest متوفرة - إنشاء طلب التحديث');
-                                result = await window.firebaseService.createUpdateRequest(
+                                result = await window.supabaseService.createUpdateRequest(
                                     this.currentBranch, 
                                     formData
                                 );
                             } else {
                                 console.warn('⚠️ createUpdateRequest غير متوفرة - محاولة استدعاءها مباشرة');
                                 // محاولة استدعاءها مباشرة
-                                result = await window.firebaseService.createUpdateRequest(
+                                result = await window.supabaseService.createUpdateRequest(
                                     this.currentBranch, 
                                     formData
                                 );
@@ -554,7 +572,7 @@
                                 this.updateStatusToPending();
                                 
                                 // تسجيل الحدث
-                                window.firebaseService.logEvent('update_request_created', {
+                                window.supabaseService.logEvent('update_request_created', {
                                     branch_id: this.currentBranch,
                                     request_type: 'social_links'
                                 });
@@ -570,7 +588,7 @@
                             console.log('🔄 dashboard: التبديل للتخزين المحلي');
                         }
                     } else {
-                        console.warn('⚠️ dashboard: firebaseService غير متوفر');
+                        console.warn('⚠️ dashboard: supabaseService غير متوفر');
                     }
                     
                     // Fallback للتخزين المحلي
@@ -665,35 +683,35 @@
             console.log('🔄 Page loaded - بدء تهيئة Dashboard...');
             console.log('🔍 جميع scripts في head:', Array.from(document.querySelectorAll('script')).map(s => s.src));
             console.log('🔍 هل تم تحميل Firebase في window؟', !!window.firebase);
-            console.log('🔍 هل تم إنشاء firebaseService؟', !!window.firebaseService);
+            console.log('🔍 هل تم إنشاء supabaseService؟', !!window.supabaseService);
             
-            // انتظار تحميل Firebase Service
+            // انتظار تحميل Supabase Service
             let attempts = 0;
             const maxAttempts = 50; // 5 ثواني
             
             while (attempts < maxAttempts) {
-                if (window.firebaseService) {
-                    console.log('✅ window.firebaseService موجود - التحقق من الدوال...');
-                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.firebaseService.createUpdateRequest);
-                    console.log('🔍 getAllBranches متوفر؟', typeof window.firebaseService.getAllBranches);
+                if (window.supabaseService) {
+                    console.log('✅ window.supabaseService موجود - التحقق من الدوال...');
+                    console.log('🔍 createUpdateRequest متوفر؟', typeof window.supabaseService.createUpdateRequest);
+                    console.log('🔍 getAllBranches متوفر؟', typeof window.supabaseService.getAllBranches);
                     
                     // التحقق من وجود أي دالة Firebase أو إذا كان Firebase جاهز
-                    if (window.firebaseService.createUpdateRequest || 
-                        window.firebaseService.getAllBranches || 
-                        (window.firebaseService.checkSession && attempts > 10)) {
-                        console.log('✅ Firebase Service متوفر - إنشاء Dashboard Manager');
+                    if (window.supabaseService.createUpdateRequest || 
+                        window.supabaseService.getAllBranches || 
+                        (window.supabaseService.checkSession && attempts > 10)) {
+                        console.log('✅ Supabase Service متوفر - إنشاء Dashboard Manager');
                         window.dashboardManager = new DashboardManager();
                         return;
                     }
                 } else {
-                    console.log(`⏳ window.firebaseService غير موجود - محاولة ${attempts + 1}/${maxAttempts}`);
+                    console.log(`⏳ window.supabaseService غير موجود - محاولة ${attempts + 1}/${maxAttempts}`);
                 }
                 
                 await new Promise(resolve => setTimeout(resolve, 100));
                 attempts++;
             }
             
-            console.error('❌ لم يتم تحميل Firebase Service - إنشاء Dashboard بدون Firebase');
+            console.error('❌ لم يتم تحميل Supabase Service - إنشاء Dashboard بدون Firebase');
             window.dashboardManager = new DashboardManager();
         });
     </script>

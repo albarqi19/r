@@ -347,7 +347,7 @@
             async waitForFirebase() {
                 return new Promise((resolve) => {
                     const checkFirebase = () => {
-                        if (window.firebaseService && window.firebaseService.getAllBranches) {
+                        if (window.supabaseService && window.supabaseService.getAllBranches) {
                             console.log('✅ Firebase Service جاهز في لوحة المدير');
                             resolve();
                         } else {
@@ -364,9 +364,9 @@
                     console.log('📥 المدير: تحميل بيانات الفروع والطلبات...');
                     
                     // جلب بيانات الفروع
-                    if (window.firebaseService && typeof window.firebaseService.getAllBranches === 'function') {
-                        console.log('🔥 جلب بيانات الفروع من firebaseService...');
-                        const branchesResult = await window.firebaseService.getAllBranches();
+                    if (window.supabaseService && typeof window.supabaseService.getAllBranches === 'function') {
+                        console.log('🔥 جلب بيانات الفروع من supabaseService...');
+                        const branchesResult = await window.supabaseService.getAllBranches();
                         
                         if (branchesResult.success) {
                             this.branches = branchesResult.data;
@@ -381,9 +381,9 @@
                     }
 
                     // جلب طلبات التحديث
-                    if (window.firebaseService && typeof window.firebaseService.getPendingRequests === 'function') {
+                    if (window.supabaseService && typeof window.supabaseService.getPendingRequests === 'function') {
                         console.log('🔥 جلب الطلبات المعلقة...');
-                        const requestsResult = await window.firebaseService.getPendingRequests();
+                        const requestsResult = await window.supabaseService.getPendingRequests();
                         
                         if (requestsResult.success) {
                             this.updateRequests = requestsResult.data;
@@ -393,7 +393,7 @@
                             this.updateRequests = {};
                         }
                     } else {
-                        console.log('🔄 لا توجد طلبات - firebaseService غير متوفر');
+                        console.log('🔄 لا توجد طلبات - supabaseService غير متوفر');
                         this.updateRequests = {};
                     }
 
@@ -619,10 +619,10 @@
 
                     console.log('📝 بيانات التحديث:', updateData);
 
-                    // استخدام firebaseService للتحديث
-                    if (window.firebaseService && typeof window.firebaseService.approveUpdateRequest === 'function') {
-                        console.log('🔥 استخدام firebaseService للموافقة...');
-                        const result = await window.firebaseService.approveUpdateRequest(this.currentRequestId);
+                    // استخدام supabaseService للتحديث
+                    if (window.supabaseService && typeof window.supabaseService.approveUpdateRequest === 'function') {
+                        console.log('🔥 استخدام supabaseService للموافقة...');
+                        const result = await window.supabaseService.approveUpdateRequest(this.currentRequestId);
                         
                         if (!result.success) {
                             throw new Error(result.error || 'فشل في الموافقة');
