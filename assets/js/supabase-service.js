@@ -446,7 +446,7 @@ async function rejectUpdateRequest(requestId, reason = '') {
 // جلب الطلبات المعلقة من Supabase
 async function getPendingRequests() {
     try {
-        console.log('📋 جلب الطلبات المعلقة...');
+        console.log('📋 جلب الطلبات المعلقة من قاعدة البيانات...');
         
         if (!supabaseClient) {
             throw new Error('Supabase client غير متاح');
@@ -464,6 +464,7 @@ async function getPendingRequests() {
         }
         
         console.log('✅ تم جلب الطلبات المعلقة:', data.length, 'طلب');
+        console.log('📊 تفاصيل الطلبات:', data);
         
         // إرجاع المصفوفة مباشرة
         return data || [];
