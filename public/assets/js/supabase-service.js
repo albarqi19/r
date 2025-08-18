@@ -792,8 +792,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // تحديث الدوال في window.supabaseService بعد تحميل Supabase
         if (window.supabaseService) {
             console.log('🔄 تحديث دوال Supabase Service...');
-            console.log('📋 الدوال قبل التحديث:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
-            
             window.supabaseService.getAllBranches = getAllBranches;
             window.supabaseService.getBranch = getBranch;
             window.supabaseService.updateBranch = updateBranch;
@@ -805,18 +803,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.supabaseService.setupInitialData = setupInitialData;
             window.supabaseService.signInUser = signInUser;
             window.supabaseService.signOutUser = signOutUser;
-            
-            console.log('📋 الدوال بعد التحديث:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
             console.log('✅ تم تحديث جميع دوال Supabase Service');
-            
-            // اختبار سريع
-            if (typeof window.supabaseService.getBranch === 'function') {
-                console.log('✅ دالة getBranch متوفرة ومربوطة بنجاح');
-            } else {
-                console.error('❌ فشل في ربط دالة getBranch');
-            }
-        } else {
-            console.error('❌ window.supabaseService غير موجود!');
         }
         
         // إعداد البيانات الأولية إذا لزم الأمر
@@ -829,22 +816,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 console.log('📝 تم تحميل Supabase Service');
 
-// إضافة fallback للربط المباشر
+// ربط فوري ومباشر للدوال
 setTimeout(() => {
-    if (window.supabaseService && !window.supabaseService.getBranch) {
-        console.log('🔄 Fallback: ربط الدوال مباشرة...');
-        
-        // التحقق من وجود الدوال
+    console.log('🔄 بدء ربط الدوال الأساسية...');
+    console.log('🔍 حالة window.supabaseService:', !!window.supabaseService);
+    console.log('🔍 الدوال المتاحة قبل الربط:', window.supabaseService ? Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function') : 'غير متوفر');
+    
+    if (window.supabaseService) {
+        // ربط الدوال مباشرة إذا كانت معرفة
         if (typeof getBranch === 'function') {
             window.supabaseService.getBranch = getBranch;
             console.log('✅ تم ربط getBranch');
+        } else {
+            console.error('❌ دالة getBranch غير معرفة');
         }
         
         if (typeof getAllBranches === 'function') {
             window.supabaseService.getAllBranches = getAllBranches;
             console.log('✅ تم ربط getAllBranches');
+        } else {
+            console.error('❌ دالة getAllBranches غير معرفة');
         }
         
-        console.log('📋 الدوال المتاحة الآن:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
+        if (typeof updateBranch === 'function') {
+            window.supabaseService.updateBranch = updateBranch;
+            console.log('✅ تم ربط updateBranch');
+        }
+        
+        if (typeof createUpdateRequest === 'function') {
+            window.supabaseService.createUpdateRequest = createUpdateRequest;
+            console.log('✅ تم ربط createUpdateRequest');
+        }
+        
+        if (typeof approveUpdateRequest === 'function') {
+            window.supabaseService.approveUpdateRequest = approveUpdateRequest;
+            console.log('✅ تم ربط approveUpdateRequest');
+        }
+        
+        if (typeof rejectUpdateRequest === 'function') {
+            window.supabaseService.rejectUpdateRequest = rejectUpdateRequest;
+            console.log('✅ تم ربط rejectUpdateRequest');
+        }
+        
+        if (typeof getPendingRequests === 'function') {
+            window.supabaseService.getPendingRequests = getPendingRequests;
+            console.log('✅ تم ربط getPendingRequests');
+        }
+        
+        if (typeof checkPendingRequestsForBranch === 'function') {
+            window.supabaseService.checkPendingRequestsForBranch = checkPendingRequestsForBranch;
+            console.log('✅ تم ربط checkPendingRequestsForBranch');
+        }
+        
+        console.log('📋 الدوال المتاحة بعد الربط:', Object.keys(window.supabaseService).filter(k => typeof window.supabaseService[k] === 'function'));
+        console.log('🎯 تحديداً getBranch:', typeof window.supabaseService.getBranch);
+        console.log('🎯 تحديداً getAllBranches:', typeof window.supabaseService.getAllBranches);
+    } else {
+        console.error('❌ window.supabaseService غير موجود');
     }
-}, 2000);
+}, 500);
