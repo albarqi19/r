@@ -358,8 +358,21 @@
             div.className = 'pending-item p-6 rounded-lg shadow-sm';
             
             const branchName = getBranchName(request.branch_id);
-            const requestData = JSON.parse(request.request_data);
-            const requestDate = new Date(request.created_at).toLocaleDateString('ar-SA');
+            
+            // التحقق من نوع request_data وتحليلها إذا لزم الأمر
+            let requestData;
+            try {
+                if (typeof request.request_data === 'string') {
+                    requestData = JSON.parse(request.request_data);
+                } else {
+                    requestData = request.request_data;
+                }
+            } catch (error) {
+                console.error('خطأ في تحليل request_data:', error);
+                requestData = {};
+            }
+            
+            const requestDate = new Date(request.created_at || request.requested_at).toLocaleDateString('ar-SA');
             
             div.innerHTML = `
                 <div class="flex justify-between items-start mb-4">

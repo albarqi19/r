@@ -305,25 +305,33 @@
                 try {
                     console.log('📊 جلب بيانات الفرع:', this.currentBranch);
                     
-                    // محاولة جلب البيانات من Supabase أولاً
-                    if (window.supabaseService && window.supabaseService.getBranch) {
-                        const result = await window.supabaseService.getBranch(this.currentBranch);
-                        if (result.success && result.data) {
-                            console.log('✅ تم جلب البيانات من Supabase:', result.data);
-                            this.branchData = result.data;
-                            return;
-                        }
-                    }
-                    
-                    // Fallback إلى branchManager
-                    if (window.branchManager) {
-                        console.log('📋 استخدام branchManager...');
-                        this.branchData = await window.branchManager.loadBranchData(this.currentBranch);
+                    // انتظار Supabase Service
+                    if (!window.supabaseService || !window.supabaseService.getBranch) {
+                        console.log('⏳ انتظار تحميل Supabase Service...');
+                        // إظهار بيانات فارغة مؤقتاً
+                        this.branchData = {
+                            id: this.currentBranch,
+                            name: 'جاري التحميل...',
+                            twitter: '',
+                            whatsapp: '',
+                            instagram: '',
+                            location: ''
+                        };
                         return;
                     }
                     
-                    // Fallback النهائي - بيانات افتراضية
-                    console.warn('⚠️ استخدام البيانات الافتراضية');
+                    // جلب البيانات من Supabase
+                    const result = await window.supabaseService.getBranch(this.currentBranch);
+                    if (result.success && result.data) {
+                        console.log('✅ تم جلب البيانات من Supabase:', result.data);
+                        this.branchData = result.data;
+                        return;
+                    } else {
+                        console.log('⚠️ فشل في جلب بيانات الفرع:', result.error);
+                    }
+                    
+                    // في حالة الفشل - بيانات افتراضية فارغة
+                    console.warn('⚠️ استخدام البيانات الافتراضية الفارغة');
                     this.branchData = {
                         id: this.currentBranch,
                         name: 'الفرع',
@@ -337,7 +345,7 @@
                     console.error('❌ خطأ في جلب بيانات الفرع:', error);
                     this.branchData = {
                         id: this.currentBranch,
-                        name: 'الفرع',
+                        name: 'خطأ في التحميل',
                         twitter: '',
                         whatsapp: '',
                         instagram: '',
@@ -475,6 +483,15 @@
             
             // تهيئة لوحة التحكم
             window.dashboardManager = new DashboardManager();
+            
+            // إعادة تحميل البيانات إذا كانت فارغة (بعد توفر Supabase)
+            if (window.dashboardManager.branchData && 
+                window.dashboardManager.branchData.name === 'جاري التحميل...') {
+                console.log('🔄 إعادة تحميل البيانات بعد توفر Supabase...');
+                await window.dashboardManager.loadBranchData();
+                window.dashboardManager.updateUI();
+            }
+            
             console.log('✅ تم تحميل لوحة تحكم الفرع');
         });
     </script>
