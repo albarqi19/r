@@ -190,181 +190,137 @@
                     return;
                 }
 
-                console.log('⏳ بدء تسجيل الدخول...');
+                console.log('⏳ بدء تسجيل الدخول مع Supabase Auth الحقيقي...');
+                console.log('📧 الإيميل:', email);
+                console.log('🔑 طول كلمة المرور:', password.length);
+                
                 this.showLoading(true);
                 this.hideMessages();
 
                 try {
-                    console.log('🔍 استدعاء authenticateUser...');
-                    // البحث عن المستخدم في قاعدة البيانات
-                    const user = await this.authenticateUser(email, password);
+                    // التحقق من وجود Supabase Service
+                    if (!window.supabaseService || !window.supabaseService.signInUser) {
+                        console.error('❌ Supabase Service غير متوفر');
+                        throw new Error('النظام غير متاح حالياً، يرجى المحاولة لاحقاً');
+                    }
                     
-                    console.log('🎯 نتيجة المصادقة:', user);
+                    console.log('✅ استخدام Supabase Auth الحقيقي');
                     
-                    if (user) {
-                        console.log('✅ تم العثور على المستخدم، حفظ الجلسة...');
-                        // حفظ بيانات المستخدم في التخزين المحلي
-                        this.saveUserSession(user);
+                    // تسجيل الدخول عبر Supabase Auth
+                    const result = await window.supabaseService.signInUser(email, password);
+                    
+                    console.log('📊 نتيجة تسجيل الدخول:', result);
+                    
+                    if (result.success) {
+                        const user = result.user;
+                        console.log('✅ تم تسجيل الدخول بنجاح:', user.email);
+                        
+                        // جلب بيانات المستخدم من قاعدة البيانات
+                        const userData = await this.getUserData(user.id);
+                        console.log('📊 بيانات المستخدم:', userData);
+                        
+                        // حفظ بيانات تسجيل الدخول
+                        const loginData = {
+                            uid: user.id,
+                            email: user.email,
+                            userType: userData?.role || 'branch',
+                            branchId: userData?.branch_id || this.getBranchIdFromEmail(user.email),
+                            loginTime: new Date().toISOString()
+                        };
+                        
+                        // حفظ الجلسة
+                        if (rememberMe) {
+                            localStorage.setItem('userLogin', JSON.stringify(loginData));
+                        } else {
+                            sessionStorage.setItem('userLogin', JSON.stringify(loginData));
+                        }
                         
                         // إظهار رسالة النجاح
-                        this.showSuccess(`تم تسجيل الدخول بنجاح! مرحباً بك في ${user.branchName}`);
+                        this.showSuccess('تم تسجيل الدخول بنجاح!');
                         
-                        // التوجيه بناءً على نوع المستخدم
-                        console.log('🔄 التوجيه بعد ثانيتين...');
+                        // تسجيل الحدث
+                        if (window.supabaseService.logEvent) {
+                            window.supabaseService.logEvent('login', {
+                                method: 'email',
+                                user_type: loginData.userType
+                            });
+                        }
+                        
+                        // التوجيه بعد ثانية
                         setTimeout(() => {
-                            console.log('🎯 تنفيذ التوجيه الآن...');
-                            this.redirectUser(user);
-                        }, 2000);
+                            console.log('🚀 توجيه المستخدم إلى:', loginData.userType);
+                            this.redirectUser(loginData.userType, loginData.branchId);
+                        }, 1000);
                         
                     } else {
-                        console.log('❌ لم يتم العثور على المستخدم');
-                        this.showError('بيانات تسجيل الدخول غير صحيحة');
+                        console.error('❌ فشل تسجيل الدخول:', result.error);
+                        this.showError(result.error || 'بيانات تسجيل الدخول غير صحيحة');
                     }
 
                 } catch (error) {
                     console.error('❌ خطأ في تسجيل الدخول:', error);
-                    this.showError('حدث خطأ أثناء تسجيل الدخول: ' + error.message);
+                    this.showError(error.message || 'حدث خطأ أثناء تسجيل الدخول');
                 } finally {
                     console.log('🏁 إنهاء تسجيل الدخول');
                     this.showLoading(false);
                 }
             }
 
-            async authenticateUser(email, password) {
+            async getUserData(uid) {
                 try {
-                    console.log('🔍 بدء authenticateUser بـ:', email);
+                    console.log('� جلب بيانات المستخدم من Supabase:', uid);
                     
-                    // التحقق من وجود Supabase Service
-                    if (!window.supabaseService) {
-                        console.error('❌ Supabase Service غير متوفر');
-                        throw new Error('Supabase Service غير متوفر');
-                    }
-                    
-                    console.log('✅ Supabase Service متوفر');
-                    
-                    // المحاولة الأولى: فحص بيانات المستخدمين الافتراضية
-                    console.log('� محاولة تسجيل الدخول بالبيانات الافتراضية...');
-                    
-                    // بيانات تسجيل الدخول الافتراضية
-                    const defaultCredentials = {
-                        'admin@tahfeez-sharqiya.com': {
-                            password: 'admin123',
-                            role: 'admin',
-                            name: 'مدير النظام',
-                            branchId: null
-                        },
-                        'garb@tahfeez-sharqiya.com': {
-                            password: 'admin123',
-                            role: 'branch',
-                            name: 'مسؤول فرع غرب الدمام',
-                            branchId: 'garb-dammam'
-                        },
-                        'khobar@tahfeez-sharqiya.com': {
-                            password: 'admin123',
-                            role: 'branch',
-                            name: 'مسؤول فرع الخبر',
-                            branchId: 'khobar'
-                        },
-                        'sharq@tahfeez-sharqiya.com': {
-                            password: 'admin123',
-                            role: 'branch',
-                            name: 'مسؤول فرع شرق الدمام',
-                            branchId: 'sharq-dammam'
-                        },
-                        'baqiq@tahfeez-sharqiya.com': {
-                            password: 'admin123',
-                            role: 'branch',
-                            name: 'مسؤول فرع بقيق',
-                            branchId: 'baqiq'
+                    if (window.supabaseClient) {
+                        const { data, error } = await window.supabaseClient
+                            .from('users')
+                            .select('*')
+                            .eq('id', uid)
+                            .single();
+                        
+                        if (error) {
+                            console.error('❌ خطأ في جلب بيانات المستخدم:', error);
+                            throw error;
                         }
-                    };
-                    
-                    console.log('🔍 فحص البيانات للإيميل:', email);
-                    
-                    if (defaultCredentials[email] && defaultCredentials[email].password === password) {
-                        const credential = defaultCredentials[email];
-                        console.log('✅ تم العثور على بيانات صحيحة:', credential);
                         
-                        // إنشاء كائن المستخدم
-                        const user = {
-                            uid: credential.branchId || 'admin',
-                            email: email,
-                            role: credential.role,
-                            name: credential.name,
-                            branchId: credential.branchId,
-                            loginTime: new Date().toISOString()
-                        };
-                        
-                        console.log('👤 بيانات المستخدم المُنشأة:', user);
-                        return user;
+                        console.log('✅ تم جلب بيانات المستخدم:', data);
+                        return data;
                     }
-
-                    console.log('❌ بيانات تسجيل الدخول غير صحيحة');
-                    console.log('🔍 الإيميلات المتاحة:', Object.keys(defaultCredentials));
-                    
-                    return null; // لم يتم العثور على المستخدم
-
                 } catch (error) {
-                    console.error('❌ خطأ في authenticateUser:', error);
-                    throw error;
+                    console.error('❌ خطأ في getUserData:', error);
                 }
+                return null;
             }
 
-            saveUserSession(user) {
-                // حفظ بيانات المستخدم في localStorage للـ Dashboard
-                const userSession = {
-                    uid: user.uid,
-                    email: user.email,
-                    branchId: user.branchId,
-                    branchName: user.branchName,
-                    region: user.region,
-                    role: user.role, // استخدام الدور الأصلي بدلاً من branch_manager
-                    phone: user.phone,
-                    loginTime: new Date().getTime(),
-                    timestamp: user.loginTime
+            getBranchIdFromEmail(email) {
+                const branchMap = {
+                    'garb@tahfeez-sharqiya.com': 'garb-dammam',
+                    'khobar@tahfeez-sharqiya.com': 'khobar',
+                    'sharq@tahfeez-sharqiya.com': 'sharq-dammam',
+                    'baqiq@tahfeez-sharqiya.com': 'baqiq',
+                    'anak@tahfeez-sharqiya.com': 'anak',
+                    'wadi.almiyah@tahfeez-sharqiya.com': 'wadi-almiyah',
+                    'alsarar@tahfeez-sharqiya.com': 'sarrar',
+                    'ras.tanura@tahfeez-sharqiya.com': 'ras-tanura',
+                    'qaryah@tahfeez-sharqiya.com': 'qarya',
+                    'rafeia@tahfeez-sharqiya.com': 'rafeia',
+                    'altaeriah@tahfeez-sharqiya.com': 'taaeriya'
                 };
-
-                localStorage.setItem('userSession', JSON.stringify(userSession));
-                
-                // حفظ معرف الفرع فقط لمدراء الفروع
-                if (user.branchId) {
-                    localStorage.setItem('currentBranch', user.branchId);
-                    localStorage.setItem('userToken', 'branch_' + user.branchId + '_' + Date.now());
-                } else {
-                    // للمدير العام
-                    localStorage.setItem('userToken', 'admin_' + Date.now());
-                }
-                
-                console.log('✅ تم حفظ جلسة المستخدم:', userSession);
+                return branchMap[email.toLowerCase()] || 'garb-dammam';
             }
 
-            redirectUser(user) {
-                let redirectUrl;
-                let welcomeMessage;
+            redirectUser(userType, branchId = null) {
+                console.log('🚀 توجيه المستخدم - النوع:', userType, 'الفرع:', branchId);
                 
-                // تحديد وجهة التوجيه حسب دور المستخدم
-                if (user.role === 'admin') {
-                    redirectUrl = '../admin/index.html';
-                    welcomeMessage = `مرحباً بك ${user.name} - مدير النظام`;
-                    console.log('🚀 توجيه مدير النظام إلى Admin Panel');
-                } else if (user.role === 'branch') {
-                    redirectUrl = '../dashboard/index.html';
-                    welcomeMessage = `مرحباً بك في فرع ${user.name}`;
-                    console.log(`🚀 توجيه مدير فرع إلى Dashboard`);
+                if (userType === 'admin') {
+                    console.log('➡️ توجيه إلى صفحة المدير');
+                    window.location.href = '../admin/';
                 } else {
-                    // fallback للمدراء العاديين
-                    redirectUrl = '../dashboard/index.html';
-                    welcomeMessage = `مرحباً بك ${user.name}`;
-                    console.log('🚀 توجيه افتراضي إلى Dashboard');
+                    console.log('➡️ توجيه إلى لوحة تحكم الفرع');
+                    if (branchId) {
+                        localStorage.setItem('currentBranch', branchId);
+                    }
+                    window.location.href = '../dashboard/';
                 }
-                
-                // إضافة رسالة ترحيب
-                this.showSuccess(welcomeMessage);
-                
-                // التوجيه بعد ثانيتين
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 2000);
             }
 
             showError(message) {
