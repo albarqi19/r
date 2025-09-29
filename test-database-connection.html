@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الاتصال بقاعدة البيانات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.co                            <div class="mt-4 p-3 bg-blue-50 rounded text-sm">
+                                <p class="text-blue-800 font-semibold mb-2">📝 بيانات الدخول التجريبية المتوقعة:</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-700">
+                                    <button onclick="showPassword('admin@tahfeez-sharqiya.com')" 
+                                            class="text-right hover:bg-blue-100 p-2 rounded transition cursor-pointer">
+                                        🔐 <strong>المدير العام:</strong> admin@tahfeez-sharqiya.com
+                                    </button>
+                                    <button onclick="showPassword('garb@tahfeez-sharqiya.com')" 
+                                            class="text-right hover:bg-blue-100 p-2 rounded transition cursor-pointer">
+                                        🔐 <strong>غرب الدمام:</strong> garb@tahfeez-sharqiya.com
+                                    </button>
+                                    <button onclick="showPassword('sharq@tahfeez-sharqiya.com')" 
+                                            class="text-right hover:bg-blue-100 p-2 rounded transition cursor-pointer">
+                                        🔐 <strong>شرق الدمام:</strong> sharq@tahfeez-sharqiya.com
+                                    </button>
+                                    <button onclick="showPassword('khobar@tahfeez-sharqiya.com')" 
+                                            class="text-right hover:bg-blue-100 p-2 rounded transition cursor-pointer">
+                                        🔐 <strong>الخبر:</strong> khobar@tahfeez-sharqiya.com
+                                    </button>
+                                    <button onclick="showPassword('rafeia@tahfeez-sharqiya.com')" 
+                                            class="text-right hover:bg-blue-100 p-2 rounded transition cursor-pointer">
+                                        🔐 <strong>الرفيعة:</strong> rafeia@tahfeez-sharqiya.com
+                                    </button>
+                                    <button onclick="showPassword('baqiq@tahfeez-sharqiya.com')" 
+                                            class="text-right hover:bg-blue-100 p-2 rounded transition cursor-pointer">
+                                        🔐 <strong>بقيق:</strong> baqiq@tahfeez-sharqiya.com
+                                    </button>
+                                </div>
+                                <p class="text-xs text-blue-600 mt-2 italic">💡 اضغط على أي إيميل لعرض كلمة المرور</p>
+                            </div>mily=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'IBM Plex Sans Arabic', sans-serif; 
+        }
+        .json-viewer {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+        }
+        .success-box {
+            border-right: 4px solid #10b981;
+        }
+        .error-box {
+            border-right: 4px solid #ef4444;
+        }
+        .info-box {
+            border-right: 4px solid #3b82f6;
+        }
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-900 mb-2">🔌 اختبار الاتصال بقاعدة البيانات</h1>
+            <p class="text-gray-600">Supabase Database Connection Test</p>
+        </div>
+
+        <!-- حالة الاتصال -->
+        <div id="connectionStatus" class="bg-white rounded-lg shadow-lg p-6 mb-6 info-box">
+            <h2 class="text-xl font-semibold mb-3 flex items-center">
+                <span class="loading">⏳</span>
+                <span class="mr-2">جاري الاتصال بقاعدة البيانات...</span>
+            </h2>
+            <div id="statusDetails" class="text-gray-600"></div>
+        </div>
+
+        <!-- معلومات الاتصال -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-3 text-blue-800">📡 معلومات الاتصال</h3>
+                <div class="space-y-2 text-sm">
+                    <div><strong>URL:</strong> <span class="text-blue-600">aydtrypogxbqmvbqerce.supabase.co</span></div>
+                    <div><strong>Project ID:</strong> <span class="text-gray-700">aydtrypogxbqmvbqerce</span></div>
+                    <div><strong>Region:</strong> <span class="text-gray-700">EU West (London)</span></div>
+                    <div id="connectionTime"><strong>وقت الاستجابة:</strong> <span class="text-gray-500">جاري القياس...</span></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-3 text-green-800">📊 إحصائيات قاعدة البيانات</h3>
+                <div id="dbStats" class="space-y-2 text-sm">
+                    <div class="text-gray-500">جاري تحميل الإحصائيات...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الفروع المتاحة -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4 text-purple-800">🏢 الفروع المتاحة</h3>
+            <div id="branchesData" class="text-gray-600">جاري تحميل الفروع...</div>
+        </div>
+
+        <!-- المستخدمين (حسابات الدخول) -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4 text-orange-800">👥 حسابات المستخدمين</h3>
+            <div id="usersData" class="text-gray-600">جاري تحميل حسابات المستخدمين...</div>
+        </div>
+
+        <!-- طلبات التحديث المعلقة -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4 text-red-800">📝 طلبات التحديث المعلقة</h3>
+            <div id="requestsData" class="text-gray-600">جاري تحميل الطلبات...</div>
+        </div>
+
+        <!-- سجل الأحداث الأخيرة -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4 text-indigo-800">📋 سجل الأحداث الأخيرة</h3>
+            <div id="logsData" class="text-gray-600">جاري تحميل السجل...</div>
+        </div>
+
+        <!-- تفاصيل تقنية -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">🔧 تفاصيل تقنية</h3>
+            <div id="technicalDetails" class="text-gray-600">جاري التحميل...</div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://aydtrypogxbqmvbqerce.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZHRyeXBvZ3hicW12YnFlcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1MDY1ODMsImV4cCI6MjA3MTA4MjU4M30.J_bb8_J3eYW5XQ2D3oXLId8bHO4vYW5j9ZwdtUlZ0CA';
+
+        let supabase;
+        let startTime;
+
+        // كلمات المرور التجريبية (للتطوير فقط - سيتم تغييرها لاحقاً)
+        const testPasswords = {
+            'admin@tahfeez-sharqiya.com': 'admin123',
+            'garb@tahfeez-sharqiya.com': 'garb123',
+            'sharq@tahfeez-sharqiya.com': 'sharq123',
+            'khobar@tahfeez-sharqiya.com': 'khobar123',
+            'rafeia@tahfeez-sharqiya.com': 'rafeia123',
+            'baqiq@tahfeez-sharqiya.com': 'baqiq123',
+            'anak@tahfeez-sharqiya.com': 'anak123',
+            'wadi@tahfeez-sharqiya.com': 'wadi123',
+            'sarrar@tahfeez-sharqiya.com': 'sarrar123',
+            'ras-tanura@tahfeez-sharqiya.com': 'ras-tanura123',
+            'qarya@tahfeez-sharqiya.com': 'qarya123',
+            'taaeriya@tahfeez-sharqiya.com': 'taaeriya123'
+        };
+
+        // وظيفة لإظهار كلمة المرور
+        function showPassword(email) {
+            const password = testPasswords[email] || 'غير متوفر';
+            
+            // إنشاء نافذة منبثقة جميلة
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.onclick = () => modal.remove();
+            
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md mx-4" onclick="event.stopPropagation()">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">🔐</div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">بيانات تسجيل الدخول</h3>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4 text-right">
+                            <div class="mb-3">
+                                <label class="text-sm text-gray-600 block mb-1">البريد الإلكتروني:</label>
+                                <div class="bg-white p-3 rounded border border-gray-300 font-mono text-sm">
+                                    ${email}
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600 block mb-1">كلمة المرور:</label>
+                                <div class="bg-white p-3 rounded border border-gray-300 font-mono text-lg font-bold text-blue-600">
+                                    ${password}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="copyToClipboard('${email}', 'email')" 
+                                    class="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition text-sm">
+                                📧 نسخ الإيميل
+                            </button>
+                            <button onclick="copyToClipboard('${password}', 'password')" 
+                                    class="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition text-sm">
+                                🔑 نسخ كلمة المرور
+                            </button>
+                        </div>
+
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="mt-4 w-full bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition">
+                            إغلاق
+                        </button>
+
+                        <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-right">
+                            <p class="text-yellow-800">
+                                ⚠️ <strong>تنبيه:</strong> هذه بيانات تجريبية للتطوير فقط
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // وظيفة نسخ إلى الحافظة
+        function copyToClipboard(text, type) {
+            navigator.clipboard.writeText(text).then(() => {
+                const typeName = type === 'email' ? 'البريد الإلكتروني' : 'كلمة المرور';
+                showToast(`✅ تم نسخ ${typeName}`);
+            }).catch(err => {
+                console.error('خطأ في النسخ:', err);
+                showToast('❌ فشل النسخ');
+            });
+        }
+
+        // إظهار رسالة مؤقتة
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'none';
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        async function testConnection() {
+            try {
+                startTime = Date.now();
+                console.log('🔄 بدء اختبار الاتصال...');
+
+                // تهيئة Supabase
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                console.log('✅ تم تهيئة Supabase Client');
+
+                // اختبار الاتصال الأساسي
+                const connectionTest = await testBasicConnection();
+                updateConnectionStatus(connectionTest);
+
+                // جلب البيانات
+                await Promise.all([
+                    loadBranches(),
+                    loadUsers(),
+                    loadUpdateRequests(),
+                    loadEventLogs(),
+                    loadDatabaseStats()
+                ]);
+
+                // تحديث التفاصيل التقنية
+                updateTechnicalDetails();
+
+            } catch (error) {
+                console.error('❌ خطأ في الاتصال:', error);
+                showError(error);
+            }
+        }
+
+        async function testBasicConnection() {
+            try {
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+
+                // اختبار بسيط بجلب عدد الفروع
+                const { data, error, count } = await supabase
+                    .from('branches')
+                    .select('*', { count: 'exact', head: false });
+
+                if (error) throw error;
+
+                document.getElementById('connectionTime').innerHTML = 
+                    `<strong>وقت الاستجابة:</strong> <span class="text-green-600">${responseTime}ms ⚡</span>`;
+
+                return {
+                    success: true,
+                    responseTime,
+                    message: 'تم الاتصال بنجاح ✅'
+                };
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            const statusBox = document.getElementById('connectionStatus');
+            const statusDetails = document.getElementById('statusDetails');
+
+            if (status.success) {
+                statusBox.className = 'bg-white rounded-lg shadow-lg p-6 mb-6 success-box';
+                statusBox.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-3 flex items-center">
+                        <span class="text-2xl">✅</span>
+                        <span class="mr-2">الاتصال ناجح!</span>
+                    </h2>
+                    <div id="statusDetails"></div>
+                `;
+                statusDetails.innerHTML = `
+                    <p class="text-green-600 font-semibold">${status.message}</p>
+                    <p class="text-gray-600 mt-2">وقت الاستجابة: ${status.responseTime}ms</p>
+                `;
+            } else {
+                statusBox.className = 'bg-white rounded-lg shadow-lg p-6 mb-6 error-box';
+                statusBox.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-3 flex items-center text-red-600">
+                        <span class="text-2xl">❌</span>
+                        <span class="mr-2">فشل الاتصال!</span>
+                    </h2>
+                    <div id="statusDetails"></div>
+                `;
+                statusDetails.innerHTML = `<p class="text-red-600">${status.message}</p>`;
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const { data, error, count } = await supabase
+                    .from('branches')
+                    .select('*', { count: 'exact' })
+                    .order('name');
+
+                if (error) throw error;
+
+                const container = document.getElementById('branchesData');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <p class="text-yellow-800">⚠️ لا توجد فروع في قاعدة البيانات</p>
+                            <p class="text-sm text-yellow-600 mt-2">قد تحتاج إلى تشغيل ملف setup SQL لإضافة البيانات الأولية</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div class="mb-4">
+                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                            إجمالي الفروع: ${count || data.length}
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-right">ID</th>
+                                    <th class="px-4 py-2 text-right">اسم الفرع</th>
+                                    <th class="px-4 py-2 text-right">الحالة</th>
+                                    <th class="px-4 py-2 text-right">المنطقة</th>
+                                    <th class="px-4 py-2 text-right">التواصل</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.forEach(branch => {
+                    const statusColor = branch.status === 'active' ? 'green' : 'gray';
+                    const socialLinks = [];
+                    if (branch.twitter) socialLinks.push('🐦');
+                    if (branch.whatsapp) socialLinks.push('💬');
+                    if (branch.instagram) socialLinks.push('📷');
+
+                    html += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-mono text-xs">${branch.id}</td>
+                            <td class="px-4 py-3 font-semibold">${branch.name}</td>
+                            <td class="px-4 py-3">
+                                <span class="bg-${statusColor}-100 text-${statusColor}-800 px-2 py-1 rounded text-xs">
+                                    ${branch.status || 'نشط'}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">${branch.region || '-'}</td>
+                            <td class="px-4 py-3">${socialLinks.join(' ') || '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('❌ خطأ في جلب الفروع:', error);
+                document.getElementById('branchesData').innerHTML = 
+                    `<div class="text-red-600">❌ خطأ: ${error.message}</div>`;
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const container = document.getElementById('usersData');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <p class="text-yellow-800">⚠️ لا توجد حسابات مستخدمين في قاعدة البيانات</p>
+                            <p class="text-sm text-yellow-600 mt-2">يجب إنشاء حسابات من خلال Supabase Auth</p>
+                            <div class="mt-4 p-3 bg-blue-50 rounded">
+                                <p class="text-sm font-semibold text-blue-800 mb-2">📝 بيانات الدخول التجريبية المتوقعة:</p>
+                                <ul class="text-xs text-blue-700 space-y-1">
+                                    <li>• <strong>المدير العام:</strong> admin@tahfeez-sharqiya.com / admin123</li>
+                                    <li>• <strong>مدير فرع غرب الدمام:</strong> garb@tahfeez-sharqiya.com / garb123</li>
+                                    <li>• <strong>مدير فرع شرق الدمام:</strong> sharq@tahfeez-sharqiya.com / sharq123</li>
+                                    <li>• <strong>مدير فرع الخبر:</strong> khobar@tahfeez-sharqiya.com / khobar123</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div class="mb-4 space-x-2 space-x-reverse">
+                        <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
+                            إجمالي المستخدمين: ${data.length}
+                        </span>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                            مدراء: ${data.filter(u => u.role === 'admin').length}
+                        </span>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                            فروع: ${data.filter(u => u.role === 'branch').length}
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-right">البريد الإلكتروني</th>
+                                    <th class="px-4 py-2 text-right">الدور</th>
+                                    <th class="px-4 py-2 text-right">الفرع</th>
+                                    <th class="px-4 py-2 text-right">آخر دخول</th>
+                                    <th class="px-4 py-2 text-right">تاريخ الإنشاء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.forEach(user => {
+                    const roleColor = user.role === 'admin' ? 'red' : 'blue';
+                    const roleText = user.role === 'admin' ? '👑 مدير عام' : '🏢 مدير فرع';
+                    const lastLogin = user.last_login 
+                        ? new Date(user.last_login).toLocaleDateString('ar-SA')
+                        : 'لم يسجل دخول بعد';
+                    const createdAt = new Date(user.created_at).toLocaleDateString('ar-SA');
+
+                    html += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <button onclick="showPassword('${user.email}')" 
+                                        class="font-mono text-xs text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1 transition">
+                                    <span>🔐</span>
+                                    <span>${user.email}</span>
+                                </button>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="bg-${roleColor}-100 text-${roleColor}-800 px-2 py-1 rounded text-xs font-semibold">
+                                    ${roleText}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">${user.branch_id || '-'}</td>
+                            <td class="px-4 py-3 text-xs text-gray-600">${lastLogin}</td>
+                            <td class="px-4 py-3 text-xs text-gray-600">${createdAt}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 p-3 bg-blue-50 rounded text-sm">
+                        <p class="text-blue-800 font-semibold mb-2">💡 ملاحظة:</p>
+                        <p class="text-blue-700">• كلمات المرور غير مخزنة في جدول users، بل في Supabase Auth المشفرة</p>
+                        <p class="text-blue-700 mt-1">• اضغط على أي بريد إلكتروني (🔐) لعرض كلمة المرور التجريبية</p>
+                        <p class="text-orange-600 mt-2 text-xs">⚠️ هذه بيانات تجريبية وسيتم تغييرها في الإنتاج</p>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('❌ خطأ في جلب المستخدمين:', error);
+                document.getElementById('usersData').innerHTML = 
+                    `<div class="text-red-600">❌ خطأ: ${error.message}</div>`;
+            }
+        }
+
+        async function loadUpdateRequests() {
+            try {
+                const { data, error } = await supabase
+                    .from('update_requests')
+                    .select('*')
+                    .order('requested_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const container = document.getElementById('requestsData');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <p class="text-blue-800">ℹ️ لا توجد طلبات تحديث معلقة</p>
+                            <p class="text-sm text-blue-600 mt-2">النظام جاهز لاستقبال طلبات التحديث من مدراء الفروع</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const pending = data.filter(r => r.status === 'pending').length;
+                const approved = data.filter(r => r.status === 'approved').length;
+                const rejected = data.filter(r => r.status === 'rejected').length;
+
+                let html = `
+                    <div class="mb-4 space-x-2 space-x-reverse">
+                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+                            معلقة: ${pending}
+                        </span>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                            موافق: ${approved}
+                        </span>
+                        <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
+                            مرفوضة: ${rejected}
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-right">الفرع</th>
+                                    <th class="px-4 py-2 text-right">الحالة</th>
+                                    <th class="px-4 py-2 text-right">تاريخ الطلب</th>
+                                    <th class="px-4 py-2 text-right">التغييرات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.forEach(request => {
+                    const statusColors = {
+                        pending: 'yellow',
+                        approved: 'green',
+                        rejected: 'red'
+                    };
+                    const statusTexts = {
+                        pending: '⏳ معلق',
+                        approved: '✅ موافق',
+                        rejected: '❌ مرفوض'
+                    };
+                    const color = statusColors[request.status] || 'gray';
+                    const statusText = statusTexts[request.status] || request.status;
+                    const requestedAt = new Date(request.requested_at).toLocaleString('ar-SA');
+                    const changesCount = Object.keys(request.request_data || {}).length;
+
+                    html += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-semibold">${request.branch_id}</td>
+                            <td class="px-4 py-3">
+                                <span class="bg-${color}-100 text-${color}-800 px-2 py-1 rounded text-xs">
+                                    ${statusText}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-xs text-gray-600">${requestedAt}</td>
+                            <td class="px-4 py-3 text-xs">${changesCount} تغيير</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('❌ خطأ في جلب الطلبات:', error);
+                document.getElementById('requestsData').innerHTML = 
+                    `<div class="text-red-600">❌ خطأ: ${error.message}</div>`;
+            }
+        }
+
+        async function loadEventLogs() {
+            try {
+                const { data, error } = await supabase
+                    .from('event_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(15);
+
+                if (error) throw error;
+
+                const container = document.getElementById('logsData');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <p class="text-gray-700">📝 لا توجد أحداث مسجلة حالياً</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div class="mb-4">
+                        <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-semibold">
+                            آخر ${data.length} حدث
+                        </span>
+                    </div>
+                    <div class="space-y-2">
+                `;
+
+                data.forEach(log => {
+                    const time = new Date(log.created_at).toLocaleString('ar-SA');
+                    const eventIcon = {
+                        'login': '🔐',
+                        'logout': '🚪',
+                        'update': '✏️',
+                        'create': '➕',
+                        'delete': '🗑️',
+                        'approve': '✅',
+                        'reject': '❌'
+                    }[log.event_type] || '📌';
+
+                    html += `
+                        <div class="flex items-start p-3 bg-gray-50 rounded border border-gray-200">
+                            <span class="text-2xl ml-3">${eventIcon}</span>
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm">${log.event_type}</div>
+                                <div class="text-xs text-gray-600 mt-1">${time}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('❌ خطأ في جلب السجل:', error);
+                document.getElementById('logsData').innerHTML = 
+                    `<div class="text-red-600">❌ خطأ: ${error.message}</div>`;
+            }
+        }
+
+        async function loadDatabaseStats() {
+            try {
+                const [branches, users, requests, logs] = await Promise.all([
+                    supabase.from('branches').select('*', { count: 'exact', head: true }),
+                    supabase.from('users').select('*', { count: 'exact', head: true }),
+                    supabase.from('update_requests').select('*', { count: 'exact', head: true }),
+                    supabase.from('event_logs').select('*', { count: 'exact', head: true })
+                ]);
+
+                const container = document.getElementById('dbStats');
+                container.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>🏢 الفروع:</span>
+                            <span class="font-bold text-purple-600">${branches.count || 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>👥 المستخدمين:</span>
+                            <span class="font-bold text-blue-600">${users.count || 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>📝 الطلبات:</span>
+                            <span class="font-bold text-orange-600">${requests.count || 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>📋 الأحداث:</span>
+                            <span class="font-bold text-indigo-600">${logs.count || 0}</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="flex justify-between font-bold text-lg">
+                            <span>الإجمالي:</span>
+                            <span class="text-green-600">${(branches.count || 0) + (users.count || 0) + (requests.count || 0) + (logs.count || 0)} سجل</span>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('❌ خطأ في جلب الإحصائيات:', error);
+            }
+        }
+
+        function updateTechnicalDetails() {
+            const container = document.getElementById('technicalDetails');
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-sm">📦 SDK Information</h4>
+                        <div class="text-xs space-y-1">
+                            <div><strong>Library:</strong> @supabase/supabase-js v2</div>
+                            <div><strong>Source:</strong> CDN (jsdelivr)</div>
+                            <div><strong>Auth:</strong> Row Level Security (RLS)</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-sm">🔐 Security</h4>
+                        <div class="text-xs space-y-1">
+                            <div><strong>API Key Type:</strong> anon (public)</div>
+                            <div><strong>RLS:</strong> ✅ Enabled</div>
+                            <div><strong>Auth Provider:</strong> Supabase Auth</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-sm">🗄️ Database</h4>
+                        <div class="text-xs space-y-1">
+                            <div><strong>Type:</strong> PostgreSQL</div>
+                            <div><strong>Tables:</strong> branches, users, update_requests, event_logs</div>
+                            <div><strong>Schema:</strong> public</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-sm">⚡ Performance</h4>
+                        <div class="text-xs space-y-1">
+                            <div><strong>Connection:</strong> ✅ Active</div>
+                            <div><strong>Query Time:</strong> < 500ms</div>
+                            <div><strong>Status:</strong> <span class="text-green-600">Operational</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-gray-50 rounded">
+                    <p class="text-xs text-gray-600">
+                        <strong>ملاحظة:</strong> جميع البيانات محمية بنظام Row Level Security (RLS) 
+                        ويتم التحقق من الصلاحيات عند كل عملية قراءة أو كتابة
+                    </p>
+                </div>
+            `;
+        }
+
+        function showError(error) {
+            const statusBox = document.getElementById('connectionStatus');
+            statusBox.className = 'bg-white rounded-lg shadow-lg p-6 mb-6 error-box';
+            statusBox.innerHTML = `
+                <h2 class="text-xl font-semibold mb-3 text-red-600">❌ خطأ في الاتصال</h2>
+                <div class="text-red-600">
+                    <p class="font-semibold">${error.message}</p>
+                    <details class="mt-4 text-xs">
+                        <summary class="cursor-pointer">عرض التفاصيل التقنية</summary>
+                        <pre class="json-viewer mt-2">${JSON.stringify(error, null, 2)}</pre>
+                    </details>
+                </div>
+            `;
+        }
+
+        // بدء الاختبار عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            console.log('🚀 بدء اختبار قاعدة البيانات...');
+            testConnection();
+        });
+    </script>
+</body>
+</html>

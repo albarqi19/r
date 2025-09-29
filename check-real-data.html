@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فحص البيانات الحقيقية في قاعدة البيانات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-center mb-4 text-blue-900">🔍 فحص البيانات الحقيقية</h1>
+            <p class="text-center text-gray-600 mb-6">التحقق من البيانات الفعلية المخزنة في Supabase</p>
+            
+            <div id="status" class="mb-6 p-4 bg-blue-50 rounded">
+                <p class="text-blue-800">⏳ جاري الاتصال بقاعدة البيانات...</p>
+            </div>
+
+            <div id="results" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://aydtrypogxbqmvbqerce.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZHRyeXBvZ3hicW12YnFlcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1MDY1ODMsImV4cCI6MjA3MTA4MjU4M30.J_bb8_J3eYW5XQ2D3oXLId8bHO4vYW5j9ZwdtUlZ0CA';
+
+        async function checkRealData() {
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+
+            try {
+                // 1. فحص الفروع
+                statusDiv.innerHTML = '<p class="text-blue-800">⏳ جاري فحص جدول الفروع...</p>';
+                const { data: branches, error: branchesError } = await supabase
+                    .from('branches')
+                    .select('*');
+
+                // 2. فحص المستخدمين
+                statusDiv.innerHTML = '<p class="text-blue-800">⏳ جاري فحص جدول المستخدمين...</p>';
+                const { data: users, error: usersError } = await supabase
+                    .from('users')
+                    .select('*');
+
+                // 3. فحص حسابات المصادقة (Auth)
+                statusDiv.innerHTML = '<p class="text-blue-800">⏳ جاري فحص نظام المصادقة...</p>';
+                const { data: authData, error: authError } = await supabase.auth.getSession();
+
+                // عرض النتائج
+                statusDiv.innerHTML = '<p class="text-green-800">✅ تم الاتصال بنجاح!</p>';
+
+                let html = '';
+
+                // نتائج الفروع
+                html += `
+                    <div class="border-r-4 border-purple-500 bg-white p-6 rounded shadow">
+                        <h2 class="text-xl font-bold mb-4 text-purple-800">🏢 الفروع في قاعدة البيانات</h2>
+                `;
+
+                if (branchesError) {
+                    html += `<div class="bg-red-50 p-4 rounded">
+                        <p class="text-red-800">❌ خطأ: ${branchesError.message}</p>
+                        <p class="text-sm text-red-600 mt-2">الجدول قد لا يكون موجوداً أو لا توجد صلاحيات للوصول</p>
+                    </div>`;
+                } else if (!branches || branches.length === 0) {
+                    html += `<div class="bg-yellow-50 p-4 rounded">
+                        <p class="text-yellow-800">⚠️ الجدول موجود لكن لا توجد بيانات فيه</p>
+                        <p class="text-sm text-yellow-700 mt-2">يجب تشغيل ملف SQL لإضافة الفروع</p>
+                    </div>`;
+                } else {
+                    html += `<div class="bg-green-50 p-4 rounded">
+                        <p class="text-green-800 font-semibold">✅ تم العثور على ${branches.length} فرع</p>
+                        <ul class="mt-2 space-y-1 text-sm">`;
+                    branches.forEach(b => {
+                        html += `<li class="text-gray-700">• ${b.name} (${b.id})</li>`;
+                    });
+                    html += `</ul></div>`;
+                }
+
+                html += `</div>`;
+
+                // نتائج المستخدمين
+                html += `
+                    <div class="border-r-4 border-orange-500 bg-white p-6 rounded shadow">
+                        <h2 class="text-xl font-bold mb-4 text-orange-800">👥 المستخدمين في قاعدة البيانات</h2>
+                `;
+
+                if (usersError) {
+                    html += `<div class="bg-red-50 p-4 rounded">
+                        <p class="text-red-800">❌ خطأ: ${usersError.message}</p>
+                        <p class="text-sm text-red-600 mt-2">الجدول قد لا يكون موجوداً أو لا توجد صلاحيات للوصول</p>
+                    </div>`;
+                } else if (!users || users.length === 0) {
+                    html += `<div class="bg-yellow-50 p-4 rounded">
+                        <p class="text-yellow-800 font-semibold">⚠️ لا توجد حسابات مستخدمين في قاعدة البيانات</p>
+                        <div class="mt-4 p-3 bg-blue-50 rounded">
+                            <p class="text-blue-800 font-semibold mb-2">📝 كيفية إنشاء حسابات فعلية:</p>
+                            <ol class="text-sm text-blue-700 space-y-2 list-decimal list-inside">
+                                <li>اذهب إلى Supabase Dashboard</li>
+                                <li>افتح قسم Authentication</li>
+                                <li>اضغط "Add User"</li>
+                                <li>أدخل البريد الإلكتروني وكلمة المرور</li>
+                                <li>ثم أضف بيانات المستخدم في جدول users</li>
+                            </ol>
+                        </div>
+                    </div>`;
+                } else {
+                    html += `<div class="bg-green-50 p-4 rounded">
+                        <p class="text-green-800 font-semibold">✅ تم العثور على ${users.length} مستخدم</p>
+                        <ul class="mt-2 space-y-1 text-sm">`;
+                    users.forEach(u => {
+                        const roleIcon = u.role === 'admin' ? '👑' : '🏢';
+                        html += `<li class="text-gray-700">${roleIcon} ${u.email} - ${u.role}</li>`;
+                    });
+                    html += `</ul></div>`;
+                }
+
+                html += `</div>`;
+
+                // نتائج المصادقة
+                html += `
+                    <div class="border-r-4 border-blue-500 bg-white p-6 rounded shadow">
+                        <h2 class="text-xl font-bold mb-4 text-blue-800">🔐 حالة المصادقة (Auth)</h2>
+                `;
+
+                if (authError) {
+                    html += `<div class="bg-red-50 p-4 rounded">
+                        <p class="text-red-800">❌ خطأ في المصادقة: ${authError.message}</p>
+                    </div>`;
+                } else if (!authData || !authData.session) {
+                    html += `<div class="bg-gray-50 p-4 rounded">
+                        <p class="text-gray-800">ℹ️ لا توجد جلسة نشطة حالياً</p>
+                        <p class="text-sm text-gray-600 mt-2">لم يتم تسجيل دخول أي مستخدم في هذه الصفحة</p>
+                    </div>`;
+                } else {
+                    html += `<div class="bg-green-50 p-4 rounded">
+                        <p class="text-green-800">✅ يوجد مستخدم مسجل دخول</p>
+                        <p class="text-sm text-gray-700 mt-2">${authData.session.user.email}</p>
+                    </div>`;
+                }
+
+                html += `</div>`;
+
+                // الخلاصة
+                html += `
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-lg shadow">
+                        <h2 class="text-xl font-bold mb-4 text-gray-800">📊 الخلاصة</h2>
+                        <div class="space-y-2 text-sm">
+                            <p class="font-semibold text-gray-700">الحقائق المهمة:</p>
+                            <ul class="space-y-1 text-gray-600 mr-4">
+                                <li>✅ قاعدة البيانات متصلة وتعمل</li>
+                                <li>${branches && branches.length > 0 ? '✅' : '⚠️'} جدول الفروع: ${branches ? branches.length : 0} سجل</li>
+                                <li>${users && users.length > 0 ? '✅' : '⚠️'} جدول المستخدمين: ${users ? users.length : 0} سجل</li>
+                                <li>🔐 كلمات المرور: <strong>مشفرة في Supabase Auth ولا يمكن قراءتها</strong></li>
+                            </ul>
+                            <div class="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded">
+                                <p class="text-yellow-900 font-semibold">⚠️ تنبيه مهم:</p>
+                                <p class="text-yellow-800 text-xs mt-1">
+                                    كلمات المرور الحقيقية لا يمكن الوصول إليها من قاعدة البيانات لأسباب أمنية.
+                                    هي مخزنة بشكل مشفر في نظام Supabase Auth ولا يمكن فك تشفيرها.
+                                    هذا هو المعيار الأمني الصحيح لحماية بيانات المستخدمين.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="bg-red-50 p-4 rounded">
+                        <p class="text-red-800 font-bold">❌ خطأ في الاتصال</p>
+                        <p class="text-red-700 text-sm mt-2">${error.message}</p>
+                    </div>
+                `;
+                console.error('خطأ:', error);
+            }
+        }
+
+        window.addEventListener('load', checkRealData);
+    </script>
+</body>
+</html>

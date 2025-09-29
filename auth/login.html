@@ -158,20 +158,30 @@
             }
             
             async handleLogin() {
+                console.log('🚀 بدء handleLogin...');
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 const rememberMe = document.getElementById('rememberMe').checked;
+                
+                console.log('📧 الإيميل المدخل:', email);
+                console.log('🔑 كلمة المرور طولها:', password.length, 'حرف');
                 
                 // إظهار حالة التحميل
                 this.setLoadingState(true);
                 
                 try {
-                    // محاولة تسجيل الدخول عبر Supabase
-                    if (window.supabaseService) {
+                    console.log('⏳ بدء تسجيل الدخول...');
+                    
+                    // محاولة تسجيل الدخول عبر Supabase Auth الحقيقي
+                    if (window.supabaseService && window.supabaseService.signInUser) {
+                        console.log('✅ استخدام Supabase Auth الحقيقي');
                         const result = await window.supabaseService.signInUser(email, password);
+                        
+                        console.log('📊 نتيجة تسجيل الدخول:', result);
                         
                         if (result.success) {
                             const user = result.user;
+                            console.log('✅ تم تسجيل الدخول بنجاح:', user.email);
                             
                             // جلب بيانات المستخدم من قاعدة البيانات
                             const userData = await this.getUserData(user.uid);
@@ -200,33 +210,16 @@
                             }
                             
                             // توجيه حسب نوع المستخدم
+                            console.log('🚀 توجيه المستخدم إلى:', loginData.userType);
                             this.redirectUser(loginData.userType, loginData.branchId);
                             return;
                         } else {
+                            console.error('❌ فشل تسجيل الدخول:', result.error);
                             throw new Error(result.error);
                         }
-                    }
-                    
-                    // Fallback للبيانات المحلية
-                    const userType = this.validateCredentials(email, password);
-                    
-                    if (userType) {
-                        const loginData = {
-                            email: email,
-                            userType: userType,
-                            loginTime: new Date().toISOString(),
-                            branchId: userType === 'branch' ? this.getBranchIdFromEmail(email) : null
-                        };
-                        
-                        if (rememberMe) {
-                            localStorage.setItem('userLogin', JSON.stringify(loginData));
-                        } else {
-                            sessionStorage.setItem('userLogin', JSON.stringify(loginData));
-                        }
-                        
-                        this.redirectUser(userType, loginData.branchId);
                     } else {
-                        throw new Error('بيانات تسجيل الدخول غير صحيحة');
+                        console.error('❌ Supabase Service غير متوفر');
+                        throw new Error('النظام غير متاح حالياً، يرجى المحاولة لاحقاً');
                     }
                     
                 } catch (error) {
@@ -239,44 +232,29 @@
             
             async getUserData(uid) {
                 try {
-                    if (window.supabaseService) {
+                    console.log('📊 جلب بيانات المستخدم من Supabase:', uid);
+                    
+                    if (window.supabaseClient) {
                         // جلب بيانات المستخدم من Supabase
-                        const { data, error } = await supabaseClient
+                        const { data, error } = await window.supabaseClient
                             .from('users')
                             .select('*')
                             .eq('id', uid)
                             .single();
                         
-                        if (error) throw error;
+                        if (error) {
+                            console.error('❌ خطأ في جلب بيانات المستخدم:', error);
+                            throw error;
+                        }
+                        
+                        console.log('✅ تم جلب بيانات المستخدم:', data);
                         return data;
+                    } else {
+                        console.error('❌ supabaseClient غير متوفر');
                     }
                 } catch (error) {
-                    console.log('لا يمكن جلب بيانات المستخدم، استخدام البيانات المحلية');
+                    console.error('❌ خطأ في getUserData:', error);
                 }
-                return null;
-            }
-            
-            validateCredentials(email, password) {
-                // بيانات تسجيل الدخول المحدثة لـ Supabase
-                const credentials = {
-                    'admin@tahfeez-sharqiya.com': { password: 'admin123', type: 'admin' },
-                    'garb@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'khobar@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'sharq@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'baqiq@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'anak@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'wadi.almiyah@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'alsarar@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'ras.tanura@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'qaryah@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' },
-                    'altaeriah@tahfeez-sharqiya.com': { password: 'admin123', type: 'branch' }
-                };
-                
-                const user = credentials[email.toLowerCase()];
-                if (user && user.password === password) {
-                    return user.type;
-                }
-                
                 return null;
             }
             
