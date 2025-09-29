@@ -248,6 +248,15 @@
                         // إظهار رسالة النجاح
                         this.showSuccess('تم تسجيل الدخول بنجاح!');
                         
+                        // تسجيل النشاط
+                        if (window.supabaseService.logActivity) {
+                            window.supabaseService.logActivity(
+                                'login',
+                                `تسجيل دخول ${loginData.userType === 'admin' ? 'المدير' : 'مدير فرع ' + this.getBranchNameArabic(loginData.branchId)}`,
+                                loginData.branchId
+                            );
+                        }
+                        
                         // تسجيل الحدث
                         if (window.supabaseService.logEvent) {
                             window.supabaseService.logEvent('login', {
@@ -316,6 +325,23 @@
                     'altaeriah@tahfeez-sharqiya.com': 'taaeriya'
                 };
                 return branchMap[email.toLowerCase()] || 'garb-dammam';
+            }
+            
+            getBranchNameArabic(branchId) {
+                const branchNames = {
+                    'garb-dammam': 'غرب الدمام',
+                    'khobar': 'الخبر',
+                    'sharq-dammam': 'شرق الدمام',
+                    'baqiq': 'بقيق',
+                    'anak': 'عنك',
+                    'wadi-almiyah': 'وادي المياه',
+                    'sarrar': 'السرار',
+                    'ras-tanura': 'رأس تنورة',
+                    'qarya': 'القرية',
+                    'rafeia': 'الرفيعة',
+                    'taaeriya': 'الطائرية'
+                };
+                return branchNames[branchId] || branchId;
             }
 
             redirectUser(userType, branchId = null) {

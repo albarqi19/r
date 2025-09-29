@@ -225,29 +225,10 @@
                         النشاطات الأخيرة
                     </h3>
                     
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3 p-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-700">تم اعتماد تحديث فرع الرفيعة</p>
-                                <p class="text-xs text-gray-500">منذ ساعة</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-2">
-                            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-700">طلب جديد من فرع بقيق</p>
-                                <p class="text-xs text-gray-500">منذ 3 ساعات</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-2">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-700">تسجيل دخول مدير فرع عنك</p>
-                                <p class="text-xs text-gray-500">منذ 5 ساعات</p>
-                            </div>
+                    <div id="recentActivitiesContainer" class="space-y-3">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>جاري تحميل النشاطات...</p>
                         </div>
                     </div>
                 </div>
@@ -574,8 +555,21 @@
                 
                 if (result.success) {
                     showNotification('تم اعتماد الطلب بنجاح', 'success');
-                    // إعادة تحميل الطلبات
+                    
+                    // تسجيل النشاط
+                    const request = pendingRequests.find(r => r.id === requestId);
+                    if (request && window.supabaseService.logActivity) {
+                        await window.supabaseService.logActivity(
+                            'approve_request',
+                            `تم اعتماد تحديث فرع ${getBranchNameArabic(request.branch_id)}`,
+                            request.branch_id,
+                            { request_id: requestId }
+                        );
+                    }
+                    
+                    // إعادة تحميل الطلبات والنشاطات
                     await loadPendingRequests();
+                    await loadRecentActivities();
                 } else {
                     throw new Error(result.error || 'فشل في الموافقة على الطلب');
                 }
@@ -602,8 +596,21 @@
                 
                 if (result.success) {
                     showNotification('تم رفض الطلب', 'success');
-                    // إعادة تحميل الطلبات
+                    
+                    // تسجيل النشاط
+                    const request = pendingRequests.find(r => r.id === requestId);
+                    if (request && window.supabaseService.logActivity) {
+                        await window.supabaseService.logActivity(
+                            'reject_request',
+                            `تم رفض تحديث فرع ${getBranchNameArabic(request.branch_id)}`,
+                            request.branch_id,
+                            { request_id: requestId }
+                        );
+                    }
+                    
+                    // إعادة تحميل الطلبات والنشاطات
                     await loadPendingRequests();
+                    await loadRecentActivities();
                 } else {
                     throw new Error(result.error || 'فشل في رفض الطلب');
                 }
@@ -617,6 +624,100 @@
         // View request details
         function viewRequest(branchId) {
             window.open(`../branches/${branchId}/`, '_blank');
+        }
+        
+        // Get branch name in Arabic
+        function getBranchNameArabic(branchId) {
+            const branchNames = {
+                'garb-dammam': 'غرب الدمام',
+                'khobar': 'الخبر',
+                'sharq-dammam': 'شرق الدمام',
+                'baqiq': 'بقيق',
+                'anak': 'عنك',
+                'wadi-almiyah': 'وادي المياه',
+                'sarrar': 'السرار',
+                'ras-tanura': 'رأس تنورة',
+                'qarya': 'القرية',
+                'rafeia': 'الرفيعة',
+                'taaeriya': 'الطائرية'
+            };
+            return branchNames[branchId] || branchId;
+        }
+        
+        // Load recent activities
+        async function loadRecentActivities() {
+            try {
+                console.log('📊 جلب آخر النشاطات...');
+                
+                if (!window.supabaseService || !window.supabaseService.getRecentActivities) {
+                    console.error('❌ خدمة Supabase غير متاحة');
+                    displayNoActivities();
+                    return;
+                }
+                
+                const result = await window.supabaseService.getRecentActivities(5); // آخر 5 نشاطات
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    displayActivities(result.data);
+                } else {
+                    displayNoActivities();
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في تحميل النشاطات:', error);
+                displayNoActivities();
+            }
+        }
+        
+        // Display activities
+        function displayActivities(activities) {
+            const container = document.getElementById('recentActivitiesContainer');
+            if (!container) return;
+            
+            let html = '';
+            
+            activities.forEach(activity => {
+                const color = getActivityColor(activity.action_type);
+                const timeAgo = window.supabaseService.getTimeAgo ? 
+                    window.supabaseService.getTimeAgo(activity.created_at) : 'منذ لحظات';
+                
+                html += `
+                    <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                        <div class="w-2 h-2 bg-${color}-500 rounded-full"></div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-700">${activity.description}</p>
+                            <p class="text-xs text-gray-500">${timeAgo}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Display no activities message
+        function displayNoActivities() {
+            const container = document.getElementById('recentActivitiesContainer');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="text-center py-4 text-gray-500">
+                    <i class="fas fa-info-circle mb-2"></i>
+                    <p class="text-sm">لا توجد نشاطات حديثة</p>
+                </div>
+            `;
+        }
+        
+        // Get activity color based on type
+        function getActivityColor(actionType) {
+            const colors = {
+                'login': 'blue',
+                'logout': 'gray',
+                'approve_request': 'green',
+                'reject_request': 'red',
+                'update_data': 'orange'
+            };
+            return colors[actionType] || 'gray';
         }
         
         // Update statistics
@@ -667,6 +768,9 @@
             };
             
             await waitForSupabase();
+            
+            // Load recent activities
+            await loadRecentActivities();
             
             // Logout
             const logoutBtn = document.getElementById('logoutBtn');

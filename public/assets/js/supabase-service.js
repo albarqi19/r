@@ -910,3 +910,136 @@ setTimeout(() => {
         console.error('❌ window.supabaseService غير موجود');
     }
 }, 500);
+
+// ============================================
+// Activity Logging Functions
+// ============================================
+
+/**
+ * تسجيل نشاط المستخدم
+ * @param {string} actionType - نوع النشاط: login, logout, approve_request, reject_request, update_data
+ * @param {string} description - وصف النشاط بالعربية
+ * @param {string|null} branchId - معرف الفرع (اختياري)
+ * @param {object} metadata - بيانات إضافية (اختياري)
+ * @returns {Promise<object>} نتيجة التسجيل
+ */
+async function logActivity(actionType, description, branchId = null, metadata = {}) {
+    try {
+        console.log('📝 تسجيل نشاط:', actionType, description);
+        
+        if (!supabaseClient) {
+            console.error('❌ Supabase client غير متوفر');
+            return { success: false, error: 'Supabase غير متاح' };
+        }
+        
+        // الحصول على المستخدم الحالي
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        
+        if (userError || !user) {
+            console.error('❌ لا يوجد مستخدم مسجل دخول:', userError);
+            return { success: false, error: 'المستخدم غير مسجل دخول' };
+        }
+        
+        // إدراج النشاط في قاعدة البيانات
+        const { data, error } = await supabaseClient
+            .from('activity_logs')
+            .insert([{
+                user_id: user.id,
+                user_email: user.email,
+                action_type: actionType,
+                description: description,
+                branch_id: branchId,
+                metadata: metadata
+            }])
+            .select()
+            .single();
+        
+        if (error) {
+            console.error('❌ خطأ في تسجيل النشاط:', error);
+            return { success: false, error: error.message };
+        }
+        
+        console.log('✅ تم تسجيل النشاط بنجاح:', data);
+        return { success: true, data };
+        
+    } catch (error) {
+        console.error('❌ خطأ في logActivity:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * جلب آخر النشاطات
+ * @param {number} limit - عدد النشاطات المطلوبة (افتراضي: 10)
+ * @param {string|null} branchId - تصفية حسب الفرع (اختياري)
+ * @returns {Promise<object>} قائمة النشاطات
+ */
+async function getRecentActivities(limit = 10, branchId = null) {
+    try {
+        console.log('📊 جلب آخر النشاطات...');
+        
+        if (!supabaseClient) {
+            console.error('❌ Supabase client غير متوفر');
+            return { success: false, error: 'Supabase غير متاح', data: [] };
+        }
+        
+        let query = supabaseClient
+            .from('activity_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        
+        // إضافة تصفية حسب الفرع إذا تم تحديده
+        if (branchId) {
+            query = query.eq('branch_id', branchId);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+            console.error('❌ خطأ في جلب النشاطات:', error);
+            return { success: false, error: error.message, data: [] };
+        }
+        
+        console.log('✅ تم جلب النشاطات بنجاح:', data?.length || 0, 'نشاط');
+        return { success: true, data: data || [] };
+        
+    } catch (error) {
+        console.error('❌ خطأ في getRecentActivities:', error);
+        return { success: false, error: error.message, data: [] };
+    }
+}
+
+/**
+ * حساب الوقت المنقضي بالعربية
+ * @param {string} timestamp - التاريخ والوقت
+ * @returns {string} نص بالعربية (منذ 5 دقائق، منذ ساعة، إلخ)
+ */
+function getTimeAgo(timestamp) {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return 'منذ لحظات';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `منذ ${minutes} ${minutes === 1 ? 'دقيقة' : minutes === 2 ? 'دقيقتين' : 'دقائق'}`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `منذ ${hours} ${hours === 1 ? 'ساعة' : hours === 2 ? 'ساعتين' : 'ساعات'}`;
+    } else {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `منذ ${days} ${days === 1 ? 'يوم' : days === 2 ? 'يومين' : 'أيام'}`;
+    }
+}
+
+// ربط الدوال الجديدة بـ window.supabaseService
+setTimeout(() => {
+    if (window.supabaseService) {
+        window.supabaseService.logActivity = logActivity;
+        window.supabaseService.getRecentActivities = getRecentActivities;
+        window.supabaseService.getTimeAgo = getTimeAgo;
+        console.log('✅ تم ربط دوال تسجيل النشاطات');
+    }
+}, 600);
