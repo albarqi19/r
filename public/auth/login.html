@@ -180,9 +180,11 @@
                 
                 const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value.trim();
+                const rememberMe = document.getElementById('remember')?.checked || false;
 
                 console.log('📧 الإيميل المدخل:', email);
                 console.log('🔑 كلمة المرور طولها:', password.length, 'حرف');
+                console.log('💾 تذكرني:', rememberMe);
 
                 if (!email || !password) {
                     console.log('❌ حقول فارغة');
@@ -219,12 +221,20 @@
                         const userData = await this.getUserData(user.id);
                         console.log('📊 بيانات المستخدم:', userData);
                         
+                        // تحديد نوع المستخدم من الإيميل إذا كان userData فارغاً
+                        const isAdmin = user.email === 'admin@tahfeez-sharqiya.com';
+                        const userType = userData?.role || (isAdmin ? 'admin' : 'branch');
+                        const branchId = userData?.branch_id || this.getBranchIdFromEmail(user.email);
+                        
+                        console.log('👤 نوع المستخدم:', userType);
+                        console.log('🏢 معرف الفرع:', branchId);
+                        
                         // حفظ بيانات تسجيل الدخول
                         const loginData = {
                             uid: user.id,
                             email: user.email,
-                            userType: userData?.role || 'branch',
-                            branchId: userData?.branch_id || this.getBranchIdFromEmail(user.email),
+                            userType: userType,
+                            branchId: branchId,
                             loginTime: new Date().toISOString()
                         };
                         
